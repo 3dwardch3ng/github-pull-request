@@ -1,0 +1,49 @@
+name: 'Post Release Tag Sync'
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  sync-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v3.6.0
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: 'Setup Git'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global core.autocrlf input
+          git config --global push.followTags true
+      - name: Merge Main to Next via PR
+        uses: 3dwardch3ng/github-pull-request@latest
+        with:
+          github_token: ${{ secrets.PIPELINE_GITHUB_TOKEN }}
+          repo_owner: 3dwardch3ng
+          repo_name: 'github-pull-request'
+          source_branch: 'main'
+          target_branch: 'next'
+          pr_title: 'merge from main to next'
+          require_middle_branch: true
+          auto_merge: true
+          max_merge_retries: 10
+      - name: Merge Next to Develop via PR
+        uses: 3dwardch3ng/github-pull-request@latest
+        with:
+          github_token: ${{ secrets.PIPELINE_GITHUB_TOKEN }}
+          repo_owner: 3dwardch3ng
+          repo_name: 'github-pull-request'
+          source_branch: 'next'
+          target_branch: 'develop'
+          pr_title: 'merge from next to develop'
+          require_middle_branch: true
+          auto_merge: true
+          max_merge_retries: 10

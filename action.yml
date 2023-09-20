@@ -1,0 +1,92 @@
+name: 'Delete from S3 Action'
+description: 'Delete objects from S3 bucket'
+author: '3dwardCh3nG'
+branding:
+  icon: 'delete'
+  color: 'white'
+inputs:
+  github_token:
+    description: 'The GitHub Token'
+    required: true
+  repo_owner:
+    description: 'The repository owner'
+    required: true
+  repo_name:
+    description: 'The repository name'
+    required: true
+  remote_name:
+    description: 'The remote name, default is origin if not provided'
+    required: false
+    default: 'origin'
+  source_branch:
+    description: 'The name of the branch that the new Pull Request will be merged from'
+    required: true
+  target_branch:
+    description: 'The name of the branch that the new Pull Request will be merged to'
+    required: true
+  pr_title:
+    description: 'The title of the Pull Request'
+    required: true
+  pr_body:
+    description: 'The body content of the Pull Request, will use the value of the title if not provided'
+    required: false
+  draft:
+    description: 'A draft PR will be created if set to true'
+    required: false
+    default: 'false'
+  require_middle_branch:
+    description: 'Will create a branch named SOURCE_BRANCH-merge-to-TARGET_BRANCH to create the Pull Request'
+    required: false
+    default: 'false'
+  auto_merge:
+    description: 'Once the Pull Request has been created, whether to merge this Pull Request automatically'
+    required: false
+    default: 'false'
+  merge_method:
+    description: 'The merge method when merging the Pull Request, can be "merge", "squash" or "rebase"'
+    required: false
+    default: 'merge'
+  max_merge_retries:
+    description: 'When merge the Pull Request fails, the maximum number of the retry times.'
+    required: false
+    default: '60'
+  merge_retry_interval:
+    description: 'The interval between each retry, in seconds'
+    required: false
+    default: '60'
+  milestone:
+    description: 'The milestone value of the Pull Request'
+    required: false
+  assignees:
+    description: 'The assignees value of the Pull Request, seperated by comma'
+    required: false
+  reviewers:
+    description: 'The reviewers value of the Pull Request, seperated by comma'
+    required: false
+  team_reviewers:
+    description: 'The team reviewers value of the Pull Request, seperated by comma'
+    required: false
+  labels:
+    description: 'The labels value of the Pull Request, seperated by comma'
+    required: false
+  signoff:
+    description: 'The sign off value of the Pull Request'
+    required: false
+    default: 'false'
+
+outputs:
+  pull-request-number:
+    description: 'The Pull Request number'
+  pull-request-url:
+    description: 'The Pull Request URL'
+  pull-request-operation:
+    description: 'The Pull Request operation, can be "created", "updated" or "merged"'
+  pull-request-created:
+    description: 'The Pull Request created or not'
+  pull-request-head-sha:
+    description: 'The Pull Request head sha'
+  pull-request-merge:
+    description: 'The Pull Request merge or not'
+runs:
+  using: 'node16'
+  main: 'dist/index.js'

@@ -1,0 +1,109 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - develop
+      - next
+      - main
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  test-typescript:
+    name: TypeScript Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        id: setup-node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: yarn
+      - name: Install Dependencies
+        id: yarn-ci
+        run: yarn
+      - name: Check Format
+        id: yarn-format-check
+        run: yarn format:check
+      - name: Lint
+        id: yarn-lint
+        run: yarn lint
+      - name: Test
+        id: yarn-ci-test
+        run: yarn ci-test
+      - name: Analyze with SonarCloud
+        uses: sonarsource/sonarcloud-github-action@v2.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.PIPELINE_GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  release:
+    name: generate-version
+    runs-on: ubuntu-latest
+    needs: [ test-typescript ]
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+    if: |
+      github.event_name == 'push'
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3.6.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          token: ${{ secrets.PIPELINE_GITHUB_TOKEN }}
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v7.0.5
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "lts/*"
+      - name: Set up environment
+        env:
+          GH_TOKEN: ${{secrets.PIPELINE_GITHUB_TOKEN}}
+        run: |
+          yarn install
+      - name: Generate App Version
+        env:
+          GH_TOKEN: ${{secrets.PIPELINE_GITHUB_TOKEN}}
+        shell: bash
+        run: bash ./scripts/generate-version.sh ${{ steps.branch-name.outputs.current_branch }}
+      - name: Create Tags
+        env:
+          GH_TOKEN: ${{secrets.PIPELINE_GITHUB_TOKEN}}
+          BRANCH_NAME: ${{ steps.branch-name.outputs.current_branch }}
+        run: |
+          echo "Setting git config"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global core.autocrlf input
+          git config --global push.followTags true
+          git remote set-url origin https://3dwardch3ng:"$GH_TOKEN"@github.com/3dwardch3ng/github-pull-request.git
+          if [[ "$BRANCH_NAME" == "develop" ]]
+          then
+            echo "Create extra develop tag"
+            git tag -a -f "dev" -m "latest develop"
+            git push --force --tags
+          fi
+          if [[ "$BRANCH_NAME" == "next" ]]
+          then
+            echo "Create extra next tag"
+            git tag -a -f "next" -m "latest next"
+            git push --force --tags
+          fi
+          if [[ "$BRANCH_NAME" == "main" ]]
+          then
+            echo "Create extra release tags"
+            git tag -a -f "latest" -m "latest"
+            git tag -a -f "v1" -m "v1"
+            git push --force --tags
+          fi

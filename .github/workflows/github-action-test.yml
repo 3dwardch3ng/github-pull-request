@@ -1,0 +1,38 @@
+name: GitHub Actions Test
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches:
+      - develop
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  test-action:
+    name: GitHub Actions Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v7.0.5
+      - name: Test Local Action
+        id: test-action-merge-develop-to-current-branch
+        uses: ./
+        with:
+          github_token: ${{ secrets.PIPELINE_GITHUB_TOKEN }}
+          repo_owner: 3dwardch3ng
+          repo_name: 'github-pull-request'
+          source_branch: 'develop'
+          target_branch: ${{ steps.branch-name.outputs.current_branch }}
+          pr_title: 'merge from develop'
+          require_middle_branch: true
+          auto_merge: true
+          max_merge_retries: 10

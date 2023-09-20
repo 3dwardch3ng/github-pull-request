@@ -1,8 +1,8 @@
-name: 'GitHub Pull Request Action'
-description: 'Create and Merge GitHub Pull Request'
+name: 'GitHub Pull Request Action with Auto Merge'
+description: 'Create and Auto Merge GitHub Pull Request'
 author: '3dwardCh3nG'
 branding:
-  icon: 'delete'
+  icon: 'git-pull-request'
   color: 'white'
 inputs:
   github_token:

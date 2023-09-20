@@ -1,5 +1,5 @@
-name: 'Delete from S3 Action'
-description: 'Delete objects from S3 bucket'
+name: 'GitHub Pull Request Action'
+description: 'Create and Merge GitHub Pull Request'
 author: '3dwardCh3nG'
 branding:
   icon: 'delete'

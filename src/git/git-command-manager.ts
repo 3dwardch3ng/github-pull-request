@@ -261,7 +261,12 @@ class GitCommandManager implements IGitCommandManager {
     const stdout: string[] = [];
     const stdline: string[] = [];
 
-    const listeners = {
+    const listeners: {
+      stderr: (data: Buffer) => void;
+      errline: (data: Buffer) => void;
+      stdout: (data: Buffer) => void;
+      stdline: (data: Buffer) => void;
+    } = {
       stderr: (data: Buffer): void => {
         stderr.push(data.toString());
       },
@@ -430,9 +435,10 @@ class GitCommandManager implements IGitCommandManager {
       args.push(arg);
     }
 
+    /* eslint-disable-next-line @typescript-eslint/no-this-alias */
     const that: GitCommandManager = this;
     try {
-      await this.retryHelper.execute(async () => {
+      await this.retryHelper.execute(async (): Promise<void> => {
         await that.execGit(args);
       });
       return true;
@@ -587,8 +593,9 @@ class GitCommandManager implements IGitCommandManager {
   async lfsFetch(ref: string): Promise<void> {
     const args: string[] = ['lfs', 'fetch', 'origin', ref];
 
+    /* eslint-disable-next-line @typescript-eslint/no-this-alias */
     const that: GitCommandManager = this;
-    await this.retryHelper.execute(async () => {
+    await this.retryHelper.execute(async (): Promise<void> => {
       await that.execGit(args);
     });
   }
@@ -780,7 +787,11 @@ class GitCommandManager implements IGitCommandManager {
       env[key] = this.gitEnv[key];
     }
 
-    const defaultListener = {
+    const defaultListener: {
+      stderr: (data: Buffer) => void;
+      stdout: (data: Buffer) => void;
+      debug: (data: string) => void;
+    } = {
       stdout: (data: Buffer): void => {
         result.addStdoutLine(data.toString());
       },
@@ -792,7 +803,11 @@ class GitCommandManager implements IGitCommandManager {
       }
     };
 
-    const mergedListeners = { ...defaultListener, ...customListeners };
+    const mergedListeners: {
+      stderr: (data: Buffer) => void;
+      stdout: (data: Buffer) => void;
+      debug: (data: string) => void;
+    } = { ...defaultListener, ...customListeners };
 
     const options: ExecOptions = {
       cwd: this.workingDirectory,

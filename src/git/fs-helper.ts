@@ -9,6 +9,7 @@ export function directoryExistsSync(path: string, required?: boolean): boolean {
   try {
     stats = fs.statSync(path);
   } catch (error) {
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     if ((error as any)?.code === 'ENOENT') {
       if (!required) {
         return false;
@@ -19,6 +20,7 @@ export function directoryExistsSync(path: string, required?: boolean): boolean {
 
     throw new Error(
       `Encountered an error when checking whether path '${path}' exists: ${
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         (error as any)?.message ?? error
       }`
     );
@@ -33,28 +35,6 @@ export function directoryExistsSync(path: string, required?: boolean): boolean {
   throw new Error(`Directory '${path}' does not exist`);
 }
 
-export function existsSync(path: string): boolean {
-  if (!path) {
-    throw new Error("Arg 'path' must not be empty");
-  }
-
-  try {
-    fs.statSync(path);
-  } catch (error) {
-    if ((error as any)?.code === 'ENOENT') {
-      return false;
-    }
-
-    throw new Error(
-      `Encountered an error when checking whether path '${path}' exists: ${
-        (error as any)?.message ?? error
-      }`
-    );
-  }
-
-  return true;
-}
-
 export function fileExistsSync(path: string): boolean {
   if (!path) {
     throw new Error("Arg 'path' must not be empty");
@@ -64,20 +44,18 @@ export function fileExistsSync(path: string): boolean {
   try {
     stats = fs.statSync(path);
   } catch (error) {
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     if ((error as any)?.code === 'ENOENT') {
       return false;
     }
 
     throw new Error(
       `Encountered an error when checking whether path '${path}' exists: ${
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         (error as any)?.message ?? error
       }`
     );
   }
 
-  if (!stats.isDirectory()) {
-    return true;
-  }
-
-  return false;
+  return !stats.isDirectory();
 }

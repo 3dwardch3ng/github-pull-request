@@ -107,6 +107,7 @@ class GitAuthHelper {
       await fs.promises.stat(gitConfigPath);
       configExists = true;
     } catch (err) {
+      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
       if ((err as any)?.code !== 'ENOENT') {
         throw err;
       }
@@ -243,6 +244,7 @@ class GitAuthHelper {
         await fs.promises.readFile(userKnownHostsPath)
       ).toString();
     } catch (err) {
+      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
       if ((err as any)?.code !== 'ENOENT') {
         throw err;
       }
@@ -334,6 +336,7 @@ class GitAuthHelper {
       try {
         await io.rmRF(keyPath);
       } catch (err) {
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         core.debug(`${(err as any)?.message ?? err}`);
         core.warning(`Failed to remove SSH key '${keyPath}'`);
       }

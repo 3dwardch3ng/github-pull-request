@@ -40,6 +40,7 @@ export async function prepareExistingDirectory(
         await io.rmRF(lockPath);
       } catch (error) {
         core.debug(
+          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
           `Unable to delete '${lockPath}'. ${(error as any)?.message ?? error}`
         );
       }

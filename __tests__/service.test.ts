@@ -7,7 +7,7 @@ import {
 } from '../src/service';
 import { WorkflowUtils } from '../src/workflow-utils';
 import { Pull } from '../src/github-client';
-import { GitCommandManager } from '../src/git/git-command-manager';
+import { IGitCommandManager } from '../src/git/git-command-manager';
 import {
   GitSourceSettings,
   IGitSourceSettings
@@ -58,7 +58,7 @@ jest.mock('../src/workflow-utils', () => {
 const gitCommandManagerCreateFunctionMock: jest.Mock<any, any> = jest
   .fn()
   .mockImplementation(async (workingDir: string) => {
-    const gitCommandManager: GitCommandManager = new GitCommandManager();
+    const gitCommandManager: IGitCommandManager = new GitCommandManager();
     await gitCommandManager.init(workingDir);
     return gitCommandManager;
   });

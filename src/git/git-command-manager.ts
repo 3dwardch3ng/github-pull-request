@@ -4,7 +4,6 @@ import * as fs from 'fs';
 import * as fshelper from './fs-helper';
 import * as io from '@actions/io';
 import * as path from 'path';
-import * as refHelper from './ref-helper';
 import * as regexpHelper from './regexp-helper';
 import * as retryHelperWrapper from './retry-helper-wrapper';
 import { IRetryHelper } from './retry-helper';
@@ -13,13 +12,12 @@ import { ExecOptions } from '@actions/exec';
 import { GitExecOutput } from './git-exec-output';
 import { ErrorMessages, InfoMessages } from '../message';
 import { IGitSourceSettings } from './git-source-settings';
-import { getRefSpecForAllHistory } from './ref-helper';
 
-const tagsRefSpec: string = '+refs/tags/*:refs/tags/*';
+export const tagsRefSpec: string = '+refs/tags/*:refs/tags/*';
 
 // Auth header not supported before 2.9
 // Wire protocol v2 not supported before 2.18
-export const MinimumGitVersion = new GitVersion('2.18');
+export const MinimumGitVersion: GitVersion = new GitVersion('2.18');
 
 export interface IGitCommandManager {
   getRepoRemoteUrl(): Promise<string>;
@@ -220,7 +218,7 @@ class GitCommandManager implements IGitCommandManager {
   }
 
   async branchDelete(remote: boolean, branch: string): Promise<void> {
-    const args = ['branch', '--delete', '--force'];
+    const args: string[] = ['branch', '--delete', '--force'];
     if (remote) {
       args.push('--remote');
     }
@@ -230,13 +228,13 @@ class GitCommandManager implements IGitCommandManager {
   }
 
   async branchExists(remote: boolean, pattern: string): Promise<boolean> {
-    const args = ['branch', '--list'];
+    const args: string[] = ['branch', '--list'];
     if (remote) {
       args.push('--remote');
     }
     args.push(pattern);
 
-    const output = await this.execGit(args);
+    const output: GitExecOutput = await this.execGit(args);
     return !!output.getStdout().trim();
   }
 
@@ -251,7 +249,7 @@ class GitCommandManager implements IGitCommandManager {
     // in Git 2.18 that causes "rev-parse --symbolic" to output symbolic full names. When
     // 2.18 is no longer supported, we can switch back to --symbolic.
 
-    const args = ['rev-parse', '--symbolic-full-name'];
+    const args: string[] = ['rev-parse', '--symbolic-full-name'];
     if (remote) {
       args.push('--remotes=origin');
     } else {
@@ -264,16 +262,16 @@ class GitCommandManager implements IGitCommandManager {
     const stdline: string[] = [];
 
     const listeners = {
-      stderr: (data: Buffer) => {
+      stderr: (data: Buffer): void => {
         stderr.push(data.toString());
       },
-      errline: (data: Buffer) => {
+      errline: (data: Buffer): void => {
         errline.push(data.toString());
       },
-      stdout: (data: Buffer) => {
+      stdout: (data: Buffer): void => {
         stdout.push(data.toString());
       },
-      stdline: (data: Buffer) => {
+      stdline: (data: Buffer): void => {
         stdline.push(data.toString());
       }
     };
@@ -310,12 +308,12 @@ class GitCommandManager implements IGitCommandManager {
 
   async sparseCheckoutNonConeMode(sparseCheckout: string[]): Promise<void> {
     await this.execGit(['config', 'core.sparseCheckout', 'true']);
-    const output = await this.execGit([
+    const output: GitExecOutput = await this.execGit([
       'rev-parse',
       '--git-path',
       'info/sparse-checkout'
     ]);
-    const sparseCheckoutPath = path.join(
+    const sparseCheckoutPath: string = path.join(
       this.workingDirectory,
       output.getStdout().trimRight()
     );
@@ -326,7 +324,7 @@ class GitCommandManager implements IGitCommandManager {
   }
 
   async checkout(ref: string, startPoint?: string): Promise<void> {
-    const args = ['checkout', '--progress', '--force'];
+    const args: string[] = ['checkout', '--progress', '--force'];
     if (startPoint) {
       args.push('-B', ref, startPoint);
     } else {
@@ -337,7 +335,7 @@ class GitCommandManager implements IGitCommandManager {
   }
 
   async checkoutDetach(): Promise<void> {
-    const args = ['checkout', '--detach'];
+    const args: string[] = ['checkout', '--detach'];
     await this.execGit(args);
   }
 
@@ -359,8 +357,8 @@ class GitCommandManager implements IGitCommandManager {
     configKey: string,
     globalConfig?: boolean
   ): Promise<boolean> {
-    const pattern = regexpHelper.escape(configKey);
-    const output = await this.execGit(
+    const pattern: string = regexpHelper.escape(configKey);
+    const output: GitExecOutput = await this.execGit(
       [
         'config',
         globalConfig ? '--global' : '--local',
@@ -399,8 +397,8 @@ class GitCommandManager implements IGitCommandManager {
     },
     remoteName?: string
   ): Promise<boolean> {
-    const args = ['-c', 'protocol.version=2', 'fetch'];
-    if (!refSpec.some(x => x === refHelper.tagsRefSpec) && !options.fetchTags) {
+    const args: string[] = ['-c', 'protocol.version=2', 'fetch'];
+    if (!refSpec.some(x => x === tagsRefSpec) && !options.fetchTags) {
       args.push('--no-tags');
     }
 
@@ -432,7 +430,7 @@ class GitCommandManager implements IGitCommandManager {
       args.push(arg);
     }
 
-    const that = this;
+    const that: GitCommandManager = this;
     try {
       await this.retryHelper.execute(async () => {
         await that.execGit(args);
@@ -579,7 +577,7 @@ class GitCommandManager implements IGitCommandManager {
 
   async isDetached(): Promise<boolean> {
     // Note, "branch --show-current" would be simpler but isn't available until Git 2.22
-    const output = await this.execGit(
+    const output: GitExecOutput = await this.execGit(
       ['rev-parse', '--symbolic-full-name', '--verify', '--quiet', 'HEAD'],
       true
     );
@@ -587,9 +585,9 @@ class GitCommandManager implements IGitCommandManager {
   }
 
   async lfsFetch(ref: string): Promise<void> {
-    const args = ['lfs', 'fetch', 'origin', ref];
+    const args: string[] = ['lfs', 'fetch', 'origin', ref];
 
-    const that = this;
+    const that: GitCommandManager = this;
     await this.retryHelper.execute(async () => {
       await that.execGit(args);
     });
@@ -600,9 +598,9 @@ class GitCommandManager implements IGitCommandManager {
   }
 
   async log1(format?: string): Promise<string> {
-    const args = format ? ['log', '-1', format] : ['log', '-1'];
-    const silent = format ? false : true;
-    const output = await this.execGit(args, false, silent);
+    const args: string[] = format ? ['log', '-1', format] : ['log', '-1'];
+    const silent: boolean = !format;
+    const output: GitExecOutput = await this.execGit(args, false, silent);
     return output.getStdout();
   }
 
@@ -621,7 +619,7 @@ class GitCommandManager implements IGitCommandManager {
    * @returns {Promise<string>}
    */
   async revParse(ref: string): Promise<string> {
-    const output = await this.execGit(['rev-parse', ref]);
+    const output: GitExecOutput = await this.execGit(['rev-parse', ref]);
     return output.getStdout().trim();
   }
 
@@ -630,24 +628,29 @@ class GitCommandManager implements IGitCommandManager {
   }
 
   async shaExists(sha: string): Promise<boolean> {
-    const args = ['rev-parse', '--verify', '--quiet', `${sha}^{object}`];
-    const output = await this.execGit(args, true);
+    const args: string[] = [
+      'rev-parse',
+      '--verify',
+      '--quiet',
+      `${sha}^{object}`
+    ];
+    const output: GitExecOutput = await this.execGit(args, true);
     return output.exitCode === 0;
   }
 
   async submoduleForeach(command: string, recursive: boolean): Promise<string> {
-    const args = ['submodule', 'foreach'];
+    const args: string[] = ['submodule', 'foreach'];
     if (recursive) {
       args.push('--recursive');
     }
     args.push(command);
 
-    const output = await this.execGit(args);
+    const output: GitExecOutput = await this.execGit(args);
     return output.getStdout();
   }
 
   async submoduleSync(recursive: boolean): Promise<void> {
-    const args = ['submodule', 'sync'];
+    const args: string[] = ['submodule', 'sync'];
     if (recursive) {
       args.push('--recursive');
     }
@@ -656,7 +659,7 @@ class GitCommandManager implements IGitCommandManager {
   }
 
   async submoduleUpdate(fetchDepth: number, recursive: boolean): Promise<void> {
-    const args = ['-c', 'protocol.version=2'];
+    const args: string[] = ['-c', 'protocol.version=2'];
     args.push('submodule', 'update', '--init', '--force');
     if (fetchDepth > 0) {
       args.push(`--depth=${fetchDepth}`);
@@ -670,18 +673,25 @@ class GitCommandManager implements IGitCommandManager {
   }
 
   async submoduleStatus(): Promise<boolean> {
-    const output = await this.execGit(['submodule', 'status'], true);
+    const output: GitExecOutput = await this.execGit(
+      ['submodule', 'status'],
+      true
+    );
     core.debug(output.getStdout());
     return output.exitCode === 0;
   }
 
   async tagExists(pattern: string): Promise<boolean> {
-    const output = await this.execGit(['tag', '--list', pattern]);
+    const output: GitExecOutput = await this.execGit([
+      'tag',
+      '--list',
+      pattern
+    ]);
     return !!output.getStdout().trim();
   }
 
   async tryClean(): Promise<boolean> {
-    const output = await this.execGit(['clean', '-ffdx'], true);
+    const output: GitExecOutput = await this.execGit(['clean', '-ffdx'], true);
     return output.exitCode === 0;
   }
 
@@ -689,7 +699,7 @@ class GitCommandManager implements IGitCommandManager {
     configKey: string,
     globalConfig?: boolean
   ): Promise<boolean> {
-    const output = await this.execGit(
+    const output: GitExecOutput = await this.execGit(
       [
         'config',
         globalConfig ? '--global' : '--local',
@@ -702,7 +712,7 @@ class GitCommandManager implements IGitCommandManager {
   }
 
   async tryDisableAutomaticGarbageCollection(): Promise<boolean> {
-    const output = await this.execGit(
+    const output: GitExecOutput = await this.execGit(
       ['config', '--local', 'gc.auto', '0'],
       true
     );
@@ -710,7 +720,7 @@ class GitCommandManager implements IGitCommandManager {
   }
 
   async tryGetFetchUrl(): Promise<string> {
-    const output = await this.execGit(
+    const output: GitExecOutput = await this.execGit(
       ['config', '--local', '--get', 'remote.origin.url'],
       true
     );
@@ -719,7 +729,7 @@ class GitCommandManager implements IGitCommandManager {
       return '';
     }
 
-    const stdout = output.getStdout().trim();
+    const stdout: string = output.getStdout().trim();
     if (stdout.includes('\n')) {
       return '';
     }
@@ -728,7 +738,10 @@ class GitCommandManager implements IGitCommandManager {
   }
 
   async tryReset(): Promise<boolean> {
-    const output = await this.execGit(['reset', '--hard', 'HEAD'], true);
+    const output: GitExecOutput = await this.execGit(
+      ['reset', '--hard', 'HEAD'],
+      true
+    );
     return output.exitCode === 0;
   }
 
@@ -737,7 +750,7 @@ class GitCommandManager implements IGitCommandManager {
     lfs: boolean,
     doSparseCheckout: boolean
   ): Promise<GitCommandManager> {
-    const result = new GitCommandManager();
+    const result: GitCommandManager = new GitCommandManager();
     await result.initializeCommandManager(
       workingDirectory,
       lfs,
@@ -748,17 +761,17 @@ class GitCommandManager implements IGitCommandManager {
 
   private async execGit(
     args: string[],
-    allowAllExitCodes = false,
-    silent = false,
+    allowAllExitCodes: boolean = false,
+    silent: boolean = false,
     customListeners = {}
   ): Promise<GitExecOutput> {
     fshelper.directoryExistsSync(this.workingDirectory, true);
 
-    const result = new GitExecOutput();
+    const result: GitExecOutput = new GitExecOutput();
 
     const env: { [key: string]: string } = {};
     for (const key of Object.keys(process.env)) {
-      const envVal = process.env[key];
+      const envVal: string | undefined = process.env[key];
       if (envVal !== undefined) {
         env[key] = envVal;
       }
@@ -768,20 +781,19 @@ class GitCommandManager implements IGitCommandManager {
     }
 
     const defaultListener = {
-      stdout: (data: Buffer) => {
+      stdout: (data: Buffer): void => {
         result.addStdoutLine(data.toString());
       },
-      stderr: (data: Buffer) => {
+      stderr: (data: Buffer): void => {
         result.addStderrLine(data.toString());
       },
-      debug: (data: string) => {
+      debug: (data: string): void => {
         result.addDebugLine(data);
       }
     };
 
     const mergedListeners = { ...defaultListener, ...customListeners };
 
-    const stdout: string[] = [];
     const options: ExecOptions = {
       cwd: this.workingDirectory,
       env,
@@ -818,11 +830,11 @@ class GitCommandManager implements IGitCommandManager {
 
     // Git version
     core.debug('Getting git version');
-    let gitVersion = new GitVersion();
-    let gitOutput = await this.execGit(['version']);
-    let stdout = gitOutput.getStdout().trim();
+    let gitVersion: GitVersion = new GitVersion();
+    let gitOutput: GitExecOutput = await this.execGit(['version']);
+    let stdout: string = gitOutput.getStdout().trim();
     if (!stdout.includes('\n')) {
-      const match = stdout.match(/\d+\.\d+(\.\d+)?/);
+      const match: RegExpMatchArray | null = stdout.match(/\d+\.\d+(\.\d+)?/);
       if (match) {
         gitVersion = new GitVersion(match[0]);
       }
@@ -841,12 +853,12 @@ class GitCommandManager implements IGitCommandManager {
     if (this.lfs) {
       // Git-lfs version
       core.debug('Getting git-lfs version');
-      let gitLfsVersion = new GitVersion();
-      const gitLfsPath = await io.which('git-lfs', true);
+      let gitLfsVersion: GitVersion = new GitVersion();
+      const gitLfsPath: string = await io.which('git-lfs', true);
       gitOutput = await this.execGit(['lfs', 'version']);
       stdout = gitOutput.getStdout().trim();
       if (!stdout.includes('\n')) {
-        const match = stdout.match(/\d+\.\d+(\.\d+)?/);
+        const match: RegExpMatchArray | null = stdout.match(/\d+\.\d+(\.\d+)?/);
         if (match) {
           gitLfsVersion = new GitVersion(match[0]);
         }
@@ -858,7 +870,7 @@ class GitCommandManager implements IGitCommandManager {
       // Minimum git-lfs version
       // Note:
       // - Auth header not supported before 2.1
-      const minimumGitLfsVersion = new GitVersion('2.1');
+      const minimumGitLfsVersion: GitVersion = new GitVersion('2.1');
       if (!gitLfsVersion.checkMinimum(minimumGitLfsVersion)) {
         throw new Error(
           `Minimum required git-lfs version is ${minimumGitLfsVersion}. Your git-lfs ('${gitLfsPath}') is ${gitLfsVersion}`
@@ -869,7 +881,9 @@ class GitCommandManager implements IGitCommandManager {
     this.doSparseCheckout = doSparseCheckout;
     if (this.doSparseCheckout) {
       // The `git sparse-checkout` command was introduced in Git v2.25.0
-      const minimumGitSparseCheckoutVersion = new GitVersion('2.25');
+      const minimumGitSparseCheckoutVersion: GitVersion = new GitVersion(
+        '2.25'
+      );
       if (!gitVersion.checkMinimum(minimumGitSparseCheckoutVersion)) {
         throw new Error(
           `Minimum Git version required for sparse checkout is ${minimumGitSparseCheckoutVersion}. Your git ('${this.gitPath}') is ${gitVersion}`
@@ -877,7 +891,7 @@ class GitCommandManager implements IGitCommandManager {
       }
     }
     // Set the user agent
-    const gitHttpUserAgent = `git/${gitVersion} (github-actions-checkout)`;
+    const gitHttpUserAgent: string = `git/${gitVersion} (github-actions-checkout)`;
     core.debug(`Set git useragent to: ${gitHttpUserAgent}`);
     this.gitEnv['GIT_HTTP_USER_AGENT'] = gitHttpUserAgent;
   }

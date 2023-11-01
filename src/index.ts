@@ -32,5 +32,5 @@ export const run: () => Promise<void> = async (): Promise<void> => {
   }
 };
 
-// eslint-disable-next-line git/no-then
+// eslint-disable-next-line github/no-then
 run().then(() => core.info('Action finished successfully'));

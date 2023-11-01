@@ -4,13 +4,27 @@ const defaultMaxAttempts: number = 3;
 const defaultMinSeconds: number = 10;
 const defaultMaxSeconds: number = 20;
 
+export function createRetryHelperWithDefaults(): IRetryHelper {
+  return new RetryHelper(
+    defaultMaxAttempts,
+    defaultMinSeconds,
+    defaultMaxSeconds,
+    undefined
+  );
+}
+
 export function createRetryHelper(
-  maxAttempts: number,
+  maxAttempts: number | undefined,
   minSeconds: number | undefined,
   maxSeconds: number | undefined,
   attemptsInterval: number | undefined
 ): IRetryHelper {
-  return new RetryHelper(maxAttempts, minSeconds, maxSeconds, attemptsInterval);
+  return new RetryHelper(
+    maxAttempts === undefined ? defaultMaxAttempts : Math.floor(maxAttempts),
+    minSeconds === undefined ? defaultMinSeconds : Math.floor(minSeconds),
+    maxSeconds === undefined ? defaultMaxSeconds : Math.floor(maxSeconds),
+    attemptsInterval === undefined ? undefined : Math.floor(attemptsInterval)
+  );
 }
 
 export async function executeWithDefaults<T>(

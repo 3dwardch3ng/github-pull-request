@@ -3,9 +3,9 @@ import * as exec from '@actions/exec';
 import {
   GitCommandManager,
   IWorkingBaseAndType
-} from '../src/git-command-manager';
+} from '../src/git/git-command-manager';
 import { ErrorMessages } from '../src/message';
-import { GitExecOutput } from '../src/git-exec-output';
+import { GitExecOutput } from '../src/git/git-exec-output';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const workingDirectory: string = '/home/runner/work/_temp/_github_home';
@@ -23,9 +23,9 @@ const gitCommandManagerCreateFunctionMock: jest.Mock<any, any> = jest
     return gitCommandManager;
   });
 const initMock: jest.Mock<any, any, any> = jest.fn();
-jest.mock('../src/git-command-manager', () => {
+jest.mock('../src/git/git-command-manager', () => {
   return {
-    ...jest.requireActual('../src/git-command-manager'),
+    ...jest.requireActual('../src/git/git-command-manager'),
     GitCommandManager: jest.fn().mockImplementation(() => {
       return {
         init: initMock
@@ -80,11 +80,11 @@ describe('Test git-command-manager.ts', (): void => {
   });
 
   describe('Test init function', (): void => {
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -103,11 +103,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test getRepoRemoteUrl function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -156,11 +156,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test getRemoteDetail function', (): void => {
     const workingDir: string = '/home/runner/work/_temp/_github_home';
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -178,13 +178,13 @@ describe('Test git-command-manager.ts', (): void => {
       const remoteDetail: any = gitCommandManager.getRemoteDetail(remoteUrl);
 
       expect(remoteDetail).toBeDefined();
-      expect(remoteDetail.hostname).toBe('github.com');
+      expect(remoteDetail.hostname).toBe('git.com');
       expect(remoteDetail.protocol).toBe('HTTPS');
-      expect(remoteDetail.repository).toBe('3dwardCh3nG/github-pull-request');
+      expect(remoteDetail.repository).toBe('3dwardCh3nG/git-pull-request');
     });
 
-    it('should throw error when input non url as the github server url', async (): Promise<void> => {
-      process.env['GITHUB_SERVER_URL'] = 'github.com';
+    it('should throw error when input non url as the git server url', async (): Promise<void> => {
+      process.env['GITHUB_SERVER_URL'] = 'git.com';
       const remoteUrl: string =
         'https://github.com/3dwardCh3nG/github-pull-request.git';
 
@@ -196,7 +196,7 @@ describe('Test git-command-manager.ts', (): void => {
       );
     });
 
-    it('should throw error when remote url is not a valid github url', async (): Promise<void> => {
+    it('should throw error when remote url is not a valid git url', async (): Promise<void> => {
       const remoteUrl: string =
         'https://gitlab.com/3dwardCh3nG/github-pull-request.git';
 
@@ -213,11 +213,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test getWorkingBaseAndType function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -329,11 +329,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test stashPush function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -445,11 +445,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test stashPop function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -507,11 +507,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test checkout function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -635,11 +635,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test switch function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -740,11 +740,11 @@ describe('Test git-command-manager.ts', (): void => {
   describe('Test fetch function', (): void => {
     const workingDir: string = '/home/runner/work/_temp/_github_home';
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -795,7 +795,7 @@ describe('Test git-command-manager.ts', (): void => {
             args[3] === '--progress' &&
             args[4] === '--no-recurse-submodules' &&
             args[5] === '--force' &&
-            args[6] === 'github' &&
+            args[6] === 'git' &&
             args[7] === 'develop:refs/remotes/origin/develop' &&
             gitPath === '/usr/bin/git'
           ) {
@@ -808,7 +808,7 @@ describe('Test git-command-manager.ts', (): void => {
       const gitCommandManager: GitCommandManager =
         await GitCommandManagerRealModule.GitCommandManager.create(workingDir);
 
-      const remote: string = 'github';
+      const remote: string = 'git';
       const branch: string = 'develop';
 
       const result: boolean = await gitCommandManager.fetch(remote, branch);
@@ -836,11 +836,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test fetchRemote function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -884,11 +884,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test fetchAll function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -920,11 +920,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test isAhead function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -1014,11 +1014,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test isBehind function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -1111,11 +1111,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test isEven function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -1278,11 +1278,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test pull function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -1338,11 +1338,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test push function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -1398,11 +1398,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test deleteBranch function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -1466,11 +1466,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test status function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -1544,11 +1544,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test hasDiff function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -1634,14 +1634,14 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test config function', (): void => {
     const configKey: string = 'user.name';
-    const configValue: string = 'github-actions[bot]';
+    const configValue: string = 'git-actions[bot]';
 
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -1732,11 +1732,11 @@ describe('Test git-command-manager.ts', (): void => {
     const configKey: string = 'user.name';
 
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -1838,11 +1838,11 @@ describe('Test git-command-manager.ts', (): void => {
     const configKey: string = 'user.name';
 
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -1939,11 +1939,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test getGitDirectory function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -1984,11 +1984,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test revParse function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -2033,11 +2033,11 @@ describe('Test git-command-manager.ts', (): void => {
 
   describe('Test execGit function', (): void => {
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -2080,11 +2080,11 @@ describe('Test git-command-manager.ts', (): void => {
   });
 
   describe('Test setEnvironmentVariable function', (): void => {
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 
@@ -2101,11 +2101,11 @@ describe('Test git-command-manager.ts', (): void => {
   });
 
   describe('Test removeEnvironmentVariable function', (): void => {
-    let GitCommandManagerRealModule: typeof import('../src/git-command-manager');
+    let GitCommandManagerRealModule: typeof import('../src/git/git-command-manager');
 
     beforeAll((): void => {
       GitCommandManagerRealModule = jest.requireActual(
-        '../src/git-command-manager'
+        '../src/git/git-command-manager'
       );
     });
 

@@ -2,6 +2,9 @@ export interface IGitSourceSettings {
   readonly repositoryPath: string;
   readonly repositoryOwner: string;
   readonly repositoryName: string;
+  readonly lfs: boolean;
+  readonly submodules: boolean;
+  readonly nestedSubmodules: boolean;
   readonly authToken: string;
   readonly githubServerUrl: string | undefined;
   readonly workflowOrganizationId: string | undefined;
@@ -16,6 +19,9 @@ export class GitSourceSettings implements IGitSourceSettings {
     private readonly _repositoryPath: string,
     private readonly _repositoryOwner: string,
     private readonly _repositoryName: string,
+    private readonly _lfs: boolean,
+    private readonly _submodules: boolean,
+    private readonly _nestedSubmodules: boolean,
     private readonly _authToken: string,
     private readonly _githubServerUrl: string | undefined,
     private readonly _workflowOrganizationId: string | undefined,
@@ -35,6 +41,18 @@ export class GitSourceSettings implements IGitSourceSettings {
 
   get repositoryName(): string {
     return this._repositoryName;
+  }
+
+  get lfs(): boolean {
+    return this._lfs;
+  }
+
+  get submodules(): boolean {
+    return this._submodules;
+  }
+
+  get nestedSubmodules(): boolean {
+    return this._nestedSubmodules;
   }
 
   get authToken(): string {

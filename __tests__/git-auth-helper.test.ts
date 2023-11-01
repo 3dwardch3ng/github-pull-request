@@ -4,12 +4,12 @@ import * as exec from '@actions/exec';
 import {
   GitCommandManager,
   IGitCommandManager
-} from '../src/git-command-manager';
+} from '../src/git/git-command-manager';
 import {
   GitSourceSettings,
   IGitSourceSettings
-} from '../src/git-source-settings';
-import { GitAuthHelper, IGitAuthHelper } from '../src/git-auth-helper';
+} from '../src/git/git-source-settings';
+import { GitAuthHelper, IGitAuthHelper } from '../src/git/git-auth-helper';
 import * as assert from 'assert';
 import * as os from 'os';
 import { PathLike } from 'fs';
@@ -65,7 +65,7 @@ const setEnvironmentVariableMock: jest.Mock<any, any, any> = jest
   .fn()
   .mockImplementation((): void => {});
 const gitCommandManagerMock: GitCommandManager = {
-  ...jest.requireActual('../src/git-command-manager').GitCommandManager,
+  ...jest.requireActual('../src/git/git-command-manager').GitCommandManager,
   config: configMock,
   configExists: configExistsMock,
   unsetConfig: unsetConfigMock,
@@ -73,7 +73,7 @@ const gitCommandManagerMock: GitCommandManager = {
   setEnvironmentVariable: setEnvironmentVariableMock,
   init: jest.fn()
 } as GitCommandManager;
-jest.mock('../src/git-command-manager', () => {
+jest.mock('../src/git/git-command-manager', () => {
   return {
     GitCommandManager: jest.fn().mockImplementation(() => {
       return gitCommandManagerMock;
@@ -184,8 +184,8 @@ describe('Test git-auth-helper.ts', (): void => {
         `url.https://github.com/.insteadOf`
       );
       expect(gitAuthHelper.insteadOfValues).toEqual([
-        'git@github.com:',
-        'org-1234567890@github.com:'
+        'git@git.com:',
+        'org-1234567890@git.com:'
       ]);
     });
 

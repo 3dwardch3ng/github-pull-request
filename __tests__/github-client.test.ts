@@ -56,7 +56,7 @@ jest.mock('@octokit/plugin-rest-endpoint-methods', () => {
   };
 });
 
-describe('Test github-client.ts', (): void => {
+describe('Test git-client.ts', (): void => {
   let restEndpointMethodsSpy: jest.SpyInstance;
 
   describe('Test constructor', (): void => {

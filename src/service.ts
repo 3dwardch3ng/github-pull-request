@@ -3,16 +3,19 @@ import { ErrorMessages, InfoMessages, WarningMessages } from './message';
 import * as core from '@actions/core';
 import { IWorkflowUtils, WorkflowUtils } from './workflow-utils';
 import {
-  GitCommandManager,
+  createCommandManager,
   IGitCommandManager,
   IRemoteDetail,
   IWorkingBaseAndType
-} from './git-command-manager';
-import { GitAuthHelper, IGitAuthHelper } from './git-auth-helper';
-import { GitSourceSettings, IGitSourceSettings } from './git-source-settings';
+} from './git/git-command-manager';
+import { createAuthHelper, IGitAuthHelper } from './git/git-auth-helper';
+import {
+  GitSourceSettings,
+  IGitSourceSettings
+} from './git/git-source-settings';
 import { GithubClient, IGithubClient, Pull } from './github-client';
 import { v4 as uuidv4 } from 'uuid';
-import { executeWithCustomised } from './retry-helper-wrapper';
+import { executeWithCustomised } from './git/retry-helper-wrapper';
 
 export interface IGitPreparationResponse {
   git: IGitCommandManager;
@@ -254,11 +257,18 @@ export class Service implements IService {
 
   private async prepareGitAuthentication(): Promise<IGitPreparationResponse> {
     const repoPath: string = this.workflowUtils.getRepoPath();
-    const git: IGitCommandManager = await GitCommandManager.create(repoPath);
+    const git: IGitCommandManager = await createCommandManager(
+      repoPath,
+      true,
+      true
+    );
     const gitSourceSettings: IGitSourceSettings = new GitSourceSettings(
       repoPath,
       this.inputs.REPO_OWNER,
       this.inputs.REPO_NAME,
+      false,
+      false,
+      false,
       this.inputs.GITHUB_TOKEN,
       undefined,
       undefined,
@@ -267,7 +277,7 @@ export class Service implements IService {
       undefined,
       undefined
     );
-    const gitAuthHelper: IGitAuthHelper = new GitAuthHelper(
+    const gitAuthHelper: IGitAuthHelper = createAuthHelper(
       git,
       gitSourceSettings
     );

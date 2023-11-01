@@ -7,15 +7,15 @@ import {
 } from '../src/service';
 import { WorkflowUtils } from '../src/workflow-utils';
 import { Pull } from '../src/github-client';
-import { GitCommandManager } from '../src/git-command-manager';
+import { GitCommandManager } from '../src/git/git-command-manager';
 import {
   GitSourceSettings,
   IGitSourceSettings
-} from '../src/git-source-settings';
+} from '../src/git/git-source-settings';
 import * as core from '@actions/core';
-import { IRetryHelper, RetryHelper } from '../src/retry-helper';
-import * as RetryHelperWrapper from '../src/retry-helper-wrapper';
-import { createRetryHelper } from '../src/retry-helper-wrapper';
+import { IRetryHelper, RetryHelper } from '../src/git/retry-helper';
+import * as RetryHelperWrapper from '../src/git/retry-helper-wrapper';
+import { createRetryHelper } from '../src/git/retry-helper-wrapper';
 import { AnnotationProperties } from '@actions/core';
 import { ErrorMessages, WarningMessages } from '../src/message';
 
@@ -80,9 +80,9 @@ const hasDiffMock: jest.Mock<any, any, any> = jest.fn();
 const isEvenMock: jest.Mock<any, any, any> = jest.fn();
 const fetchAllMock: jest.Mock<any, any, any> = jest.fn();
 const switchMock: jest.Mock<any, any, any> = jest.fn();
-jest.mock('../src/git-command-manager', () => {
+jest.mock('../src/git/git-command-manager', () => {
   return {
-    ...jest.requireActual('../src/git-command-manager'),
+    ...jest.requireActual('../src/git/git-command-manager'),
     GitCommandManager: jest.fn().mockImplementation(() => {
       return {
         init: initMock,
@@ -134,7 +134,7 @@ jest.mock('../src/github-client', () => {
 });
 const configureAuthMock: jest.Mock<any, any, any> = jest.fn();
 const removeAuthMock: jest.Mock<any, any, any> = jest.fn();
-jest.mock('../src/git-auth-helper', () => {
+jest.mock('../src/git/git-auth-helper', () => {
   return {
     GitAuthHelper: jest.fn().mockImplementation(() => {
       return {
@@ -144,7 +144,7 @@ jest.mock('../src/git-auth-helper', () => {
     })
   };
 });
-jest.mock('../src/git-source-settings', () => {
+jest.mock('../src/git/git-source-settings', () => {
   return {
     GitSourceSettings: jest.fn().mockImplementation(() => {
       return {
@@ -162,9 +162,9 @@ jest.mock('../src/git-source-settings', () => {
     })
   };
 });
-jest.mock('../src/retry-helper-wrapper', () => {
+jest.mock('../src/git/retry-helper-wrapper', () => {
   return {
-    ...jest.requireActual('../src/retry-helper-wrapper'),
+    ...jest.requireActual('../src/git/retry-helper-wrapper'),
     executeWithCustomised: jest.fn(),
     createRetryHelper: jest.fn()
   };
@@ -202,7 +202,7 @@ describe('Test service.ts', (): void => {
       GitCommandManager.create = gitCommandManagerCreateFunctionMock;
       getRepoRemoteUrlMock.mockReturnValue('repoRemoteUrl');
       getRemoteDetailMock.mockReturnValue({
-        hostname: 'www.github.com',
+        hostname: 'www.git.com',
         protocol: 'HTTPS',
         repository: '3dwardch3ng/create-pull-request'
       });
@@ -683,9 +683,9 @@ describe('Test service.ts', (): void => {
 });
 
 function setRequiredProcessEnvValues(): void {
-  process.env['INPUT_GITHUB_TOKEN'] = 'github-token';
+  process.env['INPUT_GITHUB_TOKEN'] = 'git-token';
   process.env['INPUT_REPO_OWNER'] = '3dwardch3ng';
-  process.env['INPUT_REPO_NAME'] = 'github-pull-request';
+  process.env['INPUT_REPO_NAME'] = 'git-pull-request';
   process.env['INPUT_SOURCE_BRANCH'] = 'source-branch';
   process.env['INPUT_TARGET_BRANCH'] = 'target-branch';
   process.env['INPUT_PR_TITLE'] = 'pr-title';

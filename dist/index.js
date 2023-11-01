@@ -3323,7 +3323,7 @@ var DEFAULTS = {
   method: "GET",
   baseUrl: "https://api.github.com",
   headers: {
-    accept: "application/vnd.github.v3+json",
+    accept: "application/vnd.git.v3+json",
     "user-agent": userAgent
   },
   mediaType: {
@@ -8556,7 +8556,7 @@ const run = async () => {
     }
 };
 exports.run = run;
-// eslint-disable-next-line github/no-then
+// eslint-disable-next-line git/no-then
 (0, exports.run)().then(() => core.info('Action finished successfully'));
 
 

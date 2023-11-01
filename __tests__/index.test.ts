@@ -185,7 +185,7 @@ function getInputsWithAutoMergeValues(autoMerge: boolean): inputs.IInputs {
   return {
     GITHUB_TOKEN: 'token',
     REPO_OWNER: '3dwardch3ng',
-    REPO_NAME: 'github-pull-request',
+    REPO_NAME: 'git-pull-request',
     REMOTE_NAME: 'origin',
     SOURCE_BRANCH_NAME: 'source-branch',
     TARGET_BRANCH_NAME: 'target-branch',

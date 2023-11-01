@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
-import { ErrorMessages } from './message';
-import { IWorkflowUtils, WorkflowUtils } from './workflow-utils';
+import { ErrorMessages } from '../message';
+import { IWorkflowUtils, WorkflowUtils } from '../workflow-utils';
 
 export interface IRetryHelper {
   execute<T>(action: (...vars: unknown[]) => Promise<T>): Promise<T>;
@@ -9,23 +9,21 @@ export interface IRetryHelper {
 export class RetryHelper implements IRetryHelper {
   private readonly workflowUtils: IWorkflowUtils;
   private readonly maxAttempts: number;
-  private readonly minSeconds: number | undefined;
-  private readonly maxSeconds: number | undefined;
+  private readonly minSeconds: number;
+  private readonly maxSeconds: number;
   private readonly attemptsInterval: number | undefined;
 
   constructor(
     maxAttempts: number,
-    minSeconds: number | undefined,
-    maxSeconds: number | undefined,
+    minSeconds: number,
+    maxSeconds: number,
     attemptsInterval: number | undefined
   ) {
     this.workflowUtils = new WorkflowUtils();
 
     this.maxAttempts = maxAttempts;
-    this.minSeconds =
-      minSeconds === undefined ? undefined : Math.floor(minSeconds);
-    this.maxSeconds =
-      maxSeconds === undefined ? undefined : Math.floor(maxSeconds);
+    this.minSeconds = minSeconds;
+    this.maxSeconds = maxSeconds;
     this.attemptsInterval =
       attemptsInterval === undefined ? undefined : Math.floor(attemptsInterval);
     if (

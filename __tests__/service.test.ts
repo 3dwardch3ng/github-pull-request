@@ -7,7 +7,7 @@ import {
 } from '../src/service';
 import { WorkflowUtils } from '../src/workflow-utils';
 import { Pull } from '../src/github-client';
-import { IGitCommandManager } from '../src/git/git-command-manager';
+import { createGitCommandManager } from '../src/git/git-command-manager';
 import {
   GitSourceSettings,
   IGitSourceSettings
@@ -15,7 +15,12 @@ import {
 import * as core from '@actions/core';
 import { IRetryHelper, RetryHelper } from '../src/git/retry-helper';
 import * as RetryHelperWrapper from '../src/git/retry-helper-wrapper';
-import { createRetryHelper } from '../src/git/retry-helper-wrapper';
+import {
+  createRetryHelper,
+  defaultMaxAttempts,
+  defaultMaxSeconds,
+  defaultMinSeconds
+} from '../src/git/retry-helper-wrapper';
 import { AnnotationProperties } from '@actions/core';
 import { ErrorMessages, WarningMessages } from '../src/message';
 
@@ -58,9 +63,7 @@ jest.mock('../src/workflow-utils', () => {
 const gitCommandManagerCreateFunctionMock: jest.Mock<any, any> = jest
   .fn()
   .mockImplementation(async (workingDir: string) => {
-    const gitCommandManager: IGitCommandManager = new GitCommandManager();
-    await gitCommandManager.init(workingDir);
-    return gitCommandManager;
+    return await createGitCommandManager(workingDir, false, false);
   });
 const initMock: jest.Mock<any, any, any> = jest.fn();
 const getRepoRemoteUrlMock: jest.Mock<any, any, any> = jest.fn();
@@ -199,7 +202,6 @@ describe('Test service.ts', (): void => {
     beforeAll((): void => {
       ServiceModule = jest.requireActual('../src/service');
       getRepoPathMock.mockReturnValue('repoPath');
-      GitCommandManager.create = gitCommandManagerCreateFunctionMock;
       getRepoRemoteUrlMock.mockReturnValue('repoRemoteUrl');
       getRemoteDetailMock.mockReturnValue({
         hostname: 'www.git.com',
@@ -569,16 +571,24 @@ describe('Test service.ts', (): void => {
           .spyOn(RetryHelperWrapper, 'createRetryHelper')
           .mockImplementation(
             (
-              maxAttempts: number,
+              maxAttempts: number | undefined,
               minSeconds: number | undefined,
               maxSeconds: number | undefined,
               attemptsInterval: number | undefined
             ): RetryHelper => {
               return new RetryHelper(
-                maxAttempts,
-                minSeconds,
-                maxSeconds,
-                attemptsInterval
+                maxAttempts === undefined
+                  ? defaultMaxAttempts
+                  : Math.floor(maxAttempts),
+                minSeconds === undefined
+                  ? defaultMinSeconds
+                  : Math.floor(minSeconds),
+                maxSeconds === undefined
+                  ? defaultMaxSeconds
+                  : Math.floor(maxSeconds),
+                attemptsInterval === undefined
+                  ? undefined
+                  : Math.floor(attemptsInterval)
               );
             }
           );
@@ -645,16 +655,24 @@ describe('Test service.ts', (): void => {
           .spyOn(RetryHelperWrapper, 'createRetryHelper')
           .mockImplementation(
             (
-              maxAttempts: number,
+              maxAttempts: number | undefined,
               minSeconds: number | undefined,
               maxSeconds: number | undefined,
               attemptsInterval: number | undefined
             ): RetryHelper => {
               return new RetryHelper(
-                maxAttempts,
-                minSeconds,
-                maxSeconds,
-                attemptsInterval
+                maxAttempts === undefined
+                  ? defaultMaxAttempts
+                  : Math.floor(maxAttempts),
+                minSeconds === undefined
+                  ? defaultMinSeconds
+                  : Math.floor(minSeconds),
+                maxSeconds === undefined
+                  ? defaultMaxSeconds
+                  : Math.floor(maxSeconds),
+                attemptsInterval === undefined
+                  ? undefined
+                  : Math.floor(attemptsInterval)
               );
             }
           );

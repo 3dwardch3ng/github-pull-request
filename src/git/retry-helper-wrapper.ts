@@ -1,8 +1,8 @@
 import { IRetryHelper, RetryHelper } from './retry-helper';
 
-const defaultMaxAttempts: number = 3;
-const defaultMinSeconds: number = 10;
-const defaultMaxSeconds: number = 20;
+export const defaultMaxAttempts: number = 3;
+export const defaultMinSeconds: number = 10;
+export const defaultMaxSeconds: number = 20;
 
 export function createRetryHelperWithDefaults(): IRetryHelper {
   return new RetryHelper(

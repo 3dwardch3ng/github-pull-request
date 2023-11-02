@@ -3,12 +3,12 @@ import { ErrorMessages, InfoMessages, WarningMessages } from './message';
 import * as core from '@actions/core';
 import { IWorkflowUtils, WorkflowUtils } from './workflow-utils';
 import {
-  createCommandManager,
+  createGitCommandManager,
   IGitCommandManager,
   IRemoteDetail,
   IWorkingBaseAndType
 } from './git/git-command-manager';
-import { createAuthHelper, IGitAuthHelper } from './git/git-auth-helper';
+import { createGitAuthHelper, IGitAuthHelper } from './git/git-auth-helper';
 import {
   GitSourceSettings,
   IGitSourceSettings
@@ -257,7 +257,7 @@ export class Service implements IService {
 
   private async prepareGitAuthentication(): Promise<IGitPreparationResponse> {
     const repoPath: string = this.workflowUtils.getRepoPath();
-    const git: IGitCommandManager = await createCommandManager(
+    const git: IGitCommandManager = await createGitCommandManager(
       repoPath,
       true,
       true
@@ -277,7 +277,7 @@ export class Service implements IService {
       undefined,
       undefined
     );
-    const gitAuthHelper: IGitAuthHelper = createAuthHelper(
+    const gitAuthHelper: IGitAuthHelper = createGitAuthHelper(
       git,
       gitSourceSettings
     );

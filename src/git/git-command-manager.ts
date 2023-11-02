@@ -10,7 +10,7 @@ import { IRetryHelper } from './retry-helper';
 import { GitVersion } from './git-version';
 import { ExecOptions } from '@actions/exec';
 import { GitExecOutput } from './git-exec-output';
-import { ErrorMessages, InfoMessages } from '../message';
+import { ErrorMessages } from '../message';
 import { IGitSourceSettings } from './git-source-settings';
 
 export const tagsRefSpec: string = '+refs/tags/*:refs/tags/*';
@@ -115,7 +115,7 @@ export async function getGitCommandManager(
 ): Promise<IGitCommandManager | undefined> {
   core.info(`Working directory is '${settings.repositoryPath}'`);
   try {
-    return await createCommandManager(settings.repositoryPath, false, false);
+    return await createGitCommandManager(settings.repositoryPath, false, false);
   } catch (err) {
     // Git is required for LFS
     if (settings.lfs) {
@@ -127,19 +127,19 @@ export async function getGitCommandManager(
   }
 }
 
-export async function createCommandManager(
+export async function createGitCommandManager(
   workingDirectory: string,
   lfs: boolean,
   doSparseCheckout: boolean
 ): Promise<IGitCommandManager> {
-  return await GitCommandManager.createCommandManager(
+  return await GitCommandManager.createGitCommandManager(
     workingDirectory,
     lfs,
     doSparseCheckout
   );
 }
 
-class GitCommandManager implements IGitCommandManager {
+export class GitCommandManager implements IGitCommandManager {
   private gitEnv: { [key: string]: string } = {
     GIT_TERMINAL_PROMPT: '0', // Disable git prompt
     GCM_INTERACTIVE: 'Never' // Disable prompting for git credential manager
@@ -572,15 +572,6 @@ class GitCommandManager implements IGitCommandManager {
     await this.execGit(['init', this.workingDirectory]);
   }
 
-  async init1(workingDirectory: string): Promise<void> {
-    core.startGroup(InfoMessages.INITIALISING_GIT_COMMAND_MANAGER);
-    core.info(InfoMessages.INITIALISING_GIT_COMMAND_MANAGER);
-    this.workingDirectory = workingDirectory;
-    this.gitPath = await io.which('git', true);
-    core.info(`Git path: ${this.gitPath}`);
-    core.endGroup();
-  }
-
   async isDetached(): Promise<boolean> {
     // Note, "branch --show-current" would be simpler but isn't available until Git 2.22
     const output: GitExecOutput = await this.execGit(
@@ -752,7 +743,7 @@ class GitCommandManager implements IGitCommandManager {
     return output.exitCode === 0;
   }
 
-  static async createCommandManager(
+  static async createGitCommandManager(
     workingDirectory: string,
     lfs: boolean,
     doSparseCheckout: boolean

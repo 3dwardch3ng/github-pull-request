@@ -15,7 +15,7 @@ import {
 } from './git/git-source-settings';
 import { GithubClient, IGithubClient, Pull } from './github-client';
 import { v4 as uuidv4 } from 'uuid';
-import { executeWithCustomised } from './git/retry-helper-wrapper';
+import { executeWithCustomised } from './retry-helper-wrapper';
 
 export interface IGitPreparationResponse {
   git: IGitCommandManager;

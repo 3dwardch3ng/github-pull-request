@@ -1,14 +1,14 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import { ExecOptions } from '@actions/exec';
 import * as fs from 'fs';
 import * as fshelper from './fs-helper';
 import * as io from '@actions/io';
 import * as path from 'path';
 import * as regexpHelper from './regexp-helper';
-import * as retryHelperWrapper from './retry-helper-wrapper';
-import { IRetryHelper } from './retry-helper';
+import * as retryHelperWrapper from '../retry-helper-wrapper';
+import { IRetryHelper } from '../retry-helper';
 import { GitVersion } from './git-version';
-import { ExecOptions } from '@actions/exec';
 import { GitExecOutput } from './git-exec-output';
 import { ErrorMessages } from '../message';
 import { IGitSourceSettings } from './git-source-settings';

@@ -2,12 +2,12 @@ import {
   createRetryHelper,
   executeWithCustomised,
   executeWithDefaults
-} from '../src/git/retry-helper-wrapper';
-import { RetryHelper } from '../src/git/retry-helper';
+} from '../src/retry-helper-wrapper';
+import { RetryHelper } from '../src/retry-helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const executeFuncMock: jest.Mock<any, any, any> = jest.fn();
-jest.mock('../src/git/retry-helper', () => {
+jest.mock('../src/retry-helper', () => {
   return {
     RetryHelper: jest.fn().mockImplementation(() => {
       return { execute: executeFuncMock };

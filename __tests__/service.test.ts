@@ -13,15 +13,15 @@ import {
   IGitSourceSettings
 } from '../src/git/git-source-settings';
 import * as core from '@actions/core';
-import { IRetryHelper, RetryHelper } from '../src/git/retry-helper';
-import * as RetryHelperWrapper from '../src/git/retry-helper-wrapper';
+import { AnnotationProperties } from '@actions/core';
+import { IRetryHelper, RetryHelper } from '../src/retry-helper';
+import * as RetryHelperWrapper from '../src/retry-helper-wrapper';
 import {
   createRetryHelper,
   defaultMaxAttempts,
   defaultMaxSeconds,
   defaultMinSeconds
-} from '../src/git/retry-helper-wrapper';
-import { AnnotationProperties } from '@actions/core';
+} from '../src/retry-helper-wrapper';
 import { ErrorMessages, WarningMessages } from '../src/message';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -165,9 +165,9 @@ jest.mock('../src/git/git-source-settings', () => {
     })
   };
 });
-jest.mock('../src/git/retry-helper-wrapper', () => {
+jest.mock('../src/retry-helper-wrapper', () => {
   return {
-    ...jest.requireActual('../src/git/retry-helper-wrapper'),
+    ...jest.requireActual('../src/retry-helper-wrapper'),
     executeWithCustomised: jest.fn(),
     createRetryHelper: jest.fn()
   };

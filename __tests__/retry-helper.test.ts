@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { createRetryHelper } from '../src/git/retry-helper-wrapper';
+import { createRetryHelper } from '../src/retry-helper-wrapper';
 import { ErrorMessages } from '../src/message';
 
 const infoMock: jest.SpyInstance<void, [message: string]> = jest.spyOn(

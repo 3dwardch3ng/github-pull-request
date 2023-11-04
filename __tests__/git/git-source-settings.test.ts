@@ -36,6 +36,9 @@ describe('Test git-source-settings.ts', (): void => {
       expect(gitSourceSettings.repositoryPath).toEqual(repositoryPath);
       expect(gitSourceSettings.repositoryOwner).toEqual(repositoryOwner);
       expect(gitSourceSettings.repositoryName).toEqual(repositoryName);
+      expect(gitSourceSettings.lfs).toEqual(false);
+      expect(gitSourceSettings.submodules).toEqual(false);
+      expect(gitSourceSettings.nestedSubmodules).toEqual(false);
       expect(gitSourceSettings.authToken).toEqual(authToken);
       expect(gitSourceSettings.githubServerUrl).toEqual(githubServerUrl);
       expect(gitSourceSettings.workflowOrganizationId).toEqual(
@@ -67,6 +70,9 @@ describe('Test git-source-settings.ts', (): void => {
       expect(gitSourceSettings.repositoryPath).toEqual(repositoryPath);
       expect(gitSourceSettings.repositoryOwner).toEqual(repositoryOwner);
       expect(gitSourceSettings.repositoryName).toEqual(repositoryName);
+      expect(gitSourceSettings.lfs).toEqual(false);
+      expect(gitSourceSettings.submodules).toEqual(false);
+      expect(gitSourceSettings.nestedSubmodules).toEqual(false);
       expect(gitSourceSettings.authToken).toEqual(authToken);
       expect(gitSourceSettings.githubServerUrl).not.toBeDefined();
       expect(gitSourceSettings.workflowOrganizationId).not.toBeDefined();

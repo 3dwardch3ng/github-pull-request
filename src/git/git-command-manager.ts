@@ -20,6 +20,12 @@ export const tagsRefSpec: string = '+refs/tags/*:refs/tags/*';
 export const MinimumGitVersion: GitVersion = new GitVersion('2.18');
 
 export interface IGitCommandManager {
+  readonly gitPath: string;
+  readonly lfs: boolean;
+  readonly doSparseCheckout: boolean;
+  readonly workingDirectory: string;
+  readonly gitEnv: { [key: string]: string };
+  readonly retryHelper: IRetryHelper;
   getRepoRemoteUrl(): Promise<string>;
   getRemoteDetail(remoteUrl: string): IRemoteDetail;
   getWorkingBaseAndType(): Promise<IWorkingBaseAndType>;
@@ -140,15 +146,15 @@ export async function createGitCommandManager(
 }
 
 export class GitCommandManager implements IGitCommandManager {
-  private gitEnv: { [key: string]: string } = {
+  private _gitEnv: { [key: string]: string } = {
     GIT_TERMINAL_PROMPT: '0', // Disable git prompt
     GCM_INTERACTIVE: 'Never' // Disable prompting for git credential manager
   };
-  private gitPath = '';
-  private lfs = false;
-  private doSparseCheckout = false;
-  private workingDirectory = '';
-  private retryHelper: IRetryHelper =
+  private _gitPath = '';
+  private _lfs = false;
+  private _doSparseCheckout = false;
+  private _workingDirectory = '';
+  private _retryHelper: IRetryHelper =
     retryHelperWrapper.createRetryHelperWithDefaults();
 
   // Private constructor; use createCommandManager()
@@ -319,7 +325,7 @@ export class GitCommandManager implements IGitCommandManager {
       'info/sparse-checkout'
     ]);
     const sparseCheckoutPath: string = path.join(
-      this.workingDirectory,
+      this._workingDirectory,
       output.getStdout().trimRight()
     );
     await fs.promises.appendFile(
@@ -420,7 +426,7 @@ export class GitCommandManager implements IGitCommandManager {
       args.push(`--depth=${options.fetchDepth}`);
     } else if (
       fshelper.fileExistsSync(
-        path.join(this.workingDirectory, '.git', 'shallow')
+        path.join(this._workingDirectory, '.git', 'shallow')
       )
     ) {
       args.push('--unshallow');
@@ -438,7 +444,7 @@ export class GitCommandManager implements IGitCommandManager {
     /* eslint-disable-next-line @typescript-eslint/no-this-alias */
     const that: GitCommandManager = this;
     try {
-      await this.retryHelper.execute(async (): Promise<void> => {
+      await this._retryHelper.execute(async (): Promise<void> => {
         await that.execGit(args);
       });
       return true;
@@ -538,7 +544,7 @@ export class GitCommandManager implements IGitCommandManager {
 
   async getDefaultBranch(repositoryUrl: string): Promise<string> {
     let output: GitExecOutput | undefined;
-    await this.retryHelper.execute(async () => {
+    await this._retryHelper.execute(async () => {
       output = await this.execGit([
         'ls-remote',
         '--quiet',
@@ -565,11 +571,11 @@ export class GitCommandManager implements IGitCommandManager {
   }
 
   getWorkingDirectory(): string {
-    return this.workingDirectory;
+    return this._workingDirectory;
   }
 
   async init(): Promise<void> {
-    await this.execGit(['init', this.workingDirectory]);
+    await this.execGit(['init', this._workingDirectory]);
   }
 
   async isDetached(): Promise<boolean> {
@@ -586,7 +592,7 @@ export class GitCommandManager implements IGitCommandManager {
 
     /* eslint-disable-next-line @typescript-eslint/no-this-alias */
     const that: GitCommandManager = this;
-    await this.retryHelper.execute(async (): Promise<void> => {
+    await this._retryHelper.execute(async (): Promise<void> => {
       await that.execGit(args);
     });
   }
@@ -607,7 +613,7 @@ export class GitCommandManager implements IGitCommandManager {
   }
 
   removeEnvironmentVariable(name: string): void {
-    delete this.gitEnv[name];
+    delete this._gitEnv[name];
   }
 
   /**
@@ -622,7 +628,7 @@ export class GitCommandManager implements IGitCommandManager {
   }
 
   setEnvironmentVariable(name: string, value: string): void {
-    this.gitEnv[name] = value;
+    this._gitEnv[name] = value;
   }
 
   async shaExists(sha: string): Promise<boolean> {
@@ -763,7 +769,7 @@ export class GitCommandManager implements IGitCommandManager {
     silent: boolean = false,
     customListeners = {}
   ): Promise<GitExecOutput> {
-    fshelper.directoryExistsSync(this.workingDirectory, true);
+    fshelper.directoryExistsSync(this._workingDirectory, true);
 
     const result: GitExecOutput = new GitExecOutput();
 
@@ -774,8 +780,8 @@ export class GitCommandManager implements IGitCommandManager {
         env[key] = envVal;
       }
     }
-    for (const key of Object.keys(this.gitEnv)) {
-      env[key] = this.gitEnv[key];
+    for (const key of Object.keys(this._gitEnv)) {
+      env[key] = this._gitEnv[key];
     }
 
     const defaultListener: {
@@ -801,14 +807,14 @@ export class GitCommandManager implements IGitCommandManager {
     } = { ...defaultListener, ...customListeners };
 
     const options: ExecOptions = {
-      cwd: this.workingDirectory,
+      cwd: this._workingDirectory,
       env,
       silent,
       ignoreReturnCode: allowAllExitCodes,
       listeners: mergedListeners
     };
 
-    result.exitCode = await exec.exec(`"${this.gitPath}"`, args, options);
+    result.exitCode = await exec.exec(`"${this._gitPath}"`, args, options);
 
     core.debug(result.exitCode.toString());
     core.debug(result.getDebug());
@@ -823,16 +829,16 @@ export class GitCommandManager implements IGitCommandManager {
     lfs: boolean,
     doSparseCheckout: boolean
   ): Promise<void> {
-    this.workingDirectory = workingDirectory;
+    this._workingDirectory = workingDirectory;
 
     // Git-lfs will try to pull down assets if any of the local/user/system setting exist.
     // If the user didn't enable `LFS` in their pipeline definition, disable LFS fetch/checkout.
-    this.lfs = lfs;
-    if (!this.lfs) {
-      this.gitEnv['GIT_LFS_SKIP_SMUDGE'] = '1';
+    this._lfs = lfs;
+    if (!this._lfs) {
+      this._gitEnv['GIT_LFS_SKIP_SMUDGE'] = '1';
     }
 
-    this.gitPath = await io.which('git', true);
+    this._gitPath = await io.which('git', true);
 
     // Git version
     core.debug('Getting git version');
@@ -852,11 +858,11 @@ export class GitCommandManager implements IGitCommandManager {
     // Minimum git version
     if (!gitVersion.checkMinimum(MinimumGitVersion)) {
       throw new Error(
-        `Minimum required git version is ${MinimumGitVersion}. Your git ('${this.gitPath}') is ${gitVersion}`
+        `Minimum required git version is ${MinimumGitVersion}. Your git ('${this._gitPath}') is ${gitVersion}`
       );
     }
 
-    if (this.lfs) {
+    if (this._lfs) {
       // Git-lfs version
       core.debug('Getting git-lfs version');
       let gitLfsVersion: GitVersion = new GitVersion();
@@ -884,22 +890,22 @@ export class GitCommandManager implements IGitCommandManager {
       }
     }
 
-    this.doSparseCheckout = doSparseCheckout;
-    if (this.doSparseCheckout) {
+    this._doSparseCheckout = doSparseCheckout;
+    if (this._doSparseCheckout) {
       // The `git sparse-checkout` command was introduced in Git v2.25.0
       const minimumGitSparseCheckoutVersion: GitVersion = new GitVersion(
         '2.25'
       );
       if (!gitVersion.checkMinimum(minimumGitSparseCheckoutVersion)) {
         throw new Error(
-          `Minimum Git version required for sparse checkout is ${minimumGitSparseCheckoutVersion}. Your git ('${this.gitPath}') is ${gitVersion}`
+          `Minimum Git version required for sparse checkout is ${minimumGitSparseCheckoutVersion}. Your git ('${this._gitPath}') is ${gitVersion}`
         );
       }
     }
     // Set the user agent
     const gitHttpUserAgent: string = `git/${gitVersion} (github-actions-checkout)`;
     core.debug(`Set git useragent to: ${gitHttpUserAgent}`);
-    this.gitEnv['GIT_HTTP_USER_AGENT'] = gitHttpUserAgent;
+    this._gitEnv['GIT_HTTP_USER_AGENT'] = gitHttpUserAgent;
   }
 
   private async revList(
@@ -957,5 +963,29 @@ export class GitCommandManager implements IGitCommandManager {
   ): RegExpMatchArray | null {
     const ghHttpsUrlPattern: RegExp = this.githubHttpsUrlPattern(host);
     return url.match(ghHttpsUrlPattern);
+  }
+
+  get gitEnv(): { [p: string]: string } {
+    return this._gitEnv;
+  }
+
+  get gitPath(): string {
+    return this._gitPath;
+  }
+
+  get lfs(): boolean {
+    return this._lfs;
+  }
+
+  get doSparseCheckout(): boolean {
+    return this._doSparseCheckout;
+  }
+
+  get workingDirectory(): string {
+    return this._workingDirectory;
+  }
+
+  get retryHelper(): IRetryHelper {
+    return this._retryHelper;
   }
 }

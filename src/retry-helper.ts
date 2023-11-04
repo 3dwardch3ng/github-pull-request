@@ -65,11 +65,6 @@ export class RetryHelper implements IRetryHelper {
     if (this.attemptsInterval !== undefined) {
       return this.attemptsInterval;
     }
-    if (this.minSeconds === undefined || this.maxSeconds === undefined) {
-      throw Error(
-        "minSeconds and maxSeconds cannot be undefined when attemptsInterval isn't provided"
-      );
-    }
     return (
       Math.floor(Math.random() * (this.maxSeconds - this.minSeconds + 1)) +
       this.minSeconds

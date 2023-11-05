@@ -1,4 +1,7 @@
-import { directoryExistsSync, fileExistsSync } from '../../src/git/fs-helper';
+import {
+  directoryExistsSync,
+  fileExistsSync
+} from '../../src/github/fs-helper';
 import fs from 'fs';
 import { BigIntStats, Stats } from 'node:fs';
 

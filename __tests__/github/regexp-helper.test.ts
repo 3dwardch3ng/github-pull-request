@@ -1,4 +1,4 @@
-import { escape } from '../../src/git/regexp-helper';
+import { escape } from '../../src/github/regexp-helper';
 
 describe('Test regexp-helper.ts', (): void => {
   describe('Test escape function', (): void => {

@@ -1,6 +1,6 @@
-import { GitVersion } from '../../src/git/git-version';
+import { GitVersion } from '../../src/github/git-version';
 
-jest.mock('../../src/git/git-version');
+jest.mock('../../src/github/git-version');
 
 describe('Test git-version.ts', (): void => {
   describe('Test constructor', (): void => {
@@ -14,11 +14,11 @@ describe('Test git-version.ts', (): void => {
   });
 
   describe('Test checkMinimum function', (): void => {
-    let GitVersionModule: typeof import('../../src/git/git-version');
+    let GitVersionModule: typeof import('../../src/github/git-version');
     let minimal: GitVersion;
 
     beforeAll((): void => {
-      GitVersionModule = jest.requireActual('../../src/git/git-version');
+      GitVersionModule = jest.requireActual('../../src/github/git-version');
       minimal = new GitVersionModule.GitVersion('1.2.3');
     });
 
@@ -58,10 +58,10 @@ describe('Test git-version.ts', (): void => {
   });
 
   describe('Test toString function', (): void => {
-    let GitVersionModule: typeof import('../../src/git/git-version');
+    let GitVersionModule: typeof import('../../src/github/git-version');
 
     beforeAll((): void => {
-      GitVersionModule = jest.requireActual('../../src/git/git-version');
+      GitVersionModule = jest.requireActual('../../src/github/git-version');
     });
 
     it('should throw error when current version is invalid', (): void => {

@@ -1,7 +1,7 @@
 import {
   GitSourceSettings,
   IGitSourceSettings
-} from '../../src/git/git-source-settings';
+} from '../../src/github/git-source-settings';
 
 const repositoryPath: string = 'repositoryPath';
 const repositoryOwner: string = 'repositoryOwner';

@@ -7,11 +7,6 @@ import {
 } from '../src/service';
 import { WorkflowUtils } from '../src/workflow-utils';
 import { Pull } from '../src/github-client';
-import { createGitCommandManager } from '../src/git/git-command-manager';
-import {
-  GitSourceSettings,
-  IGitSourceSettings
-} from '../src/git/git-source-settings';
 import * as core from '@actions/core';
 import { AnnotationProperties } from '@actions/core';
 import { IRetryHelper, RetryHelper } from '../src/retry-helper';
@@ -23,6 +18,11 @@ import {
   defaultMinSeconds
 } from '../src/retry-helper-wrapper';
 import { ErrorMessages, WarningMessages } from '../src/message';
+import { createGitCommandManager } from '../src/github/git-command-manager';
+import {
+  GitSourceSettings,
+  IGitSourceSettings
+} from '../src/github/git-source-settings';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const infoMock: jest.SpyInstance<void, [message: string]> = jest.spyOn(

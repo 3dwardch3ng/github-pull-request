@@ -6,11 +6,13 @@ import {
 } from '../../src/github/state-helper';
 
 describe('Test state-helper.ts', (): void => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let saveStateSpy: jest.SpyInstance<void, [name: string, value: any]>;
 
   beforeAll((): void => {
     saveStateSpy = jest
       .spyOn(core, 'saveState')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .mockImplementation((name: string, value: any): void => {
         process.env[`STATE_${name}`] = value;
       });

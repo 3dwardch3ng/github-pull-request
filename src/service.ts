@@ -2,20 +2,20 @@ import { IInputs } from './inputs';
 import { ErrorMessages, InfoMessages, WarningMessages } from './message';
 import * as core from '@actions/core';
 import { IWorkflowUtils, WorkflowUtils } from './workflow-utils';
+import { GithubClient, IGithubClient, Pull } from './github-client';
+import { v4 as uuidv4 } from 'uuid';
+import { executeWithCustomised } from './retry-helper-wrapper';
 import {
   createGitCommandManager,
   IGitCommandManager,
   IRemoteDetail,
   IWorkingBaseAndType
-} from './git/git-command-manager';
-import { createGitAuthHelper, IGitAuthHelper } from './git/git-auth-helper';
+} from './github/git-command-manager';
+import { createGitAuthHelper, IGitAuthHelper } from './github/git-auth-helper';
 import {
   GitSourceSettings,
   IGitSourceSettings
-} from './git/git-source-settings';
-import { GithubClient, IGithubClient, Pull } from './github-client';
-import { v4 as uuidv4 } from 'uuid';
-import { executeWithCustomised } from './retry-helper-wrapper';
+} from './github/git-source-settings';
 
 export interface IGitPreparationResponse {
   git: IGitCommandManager;

@@ -103,6 +103,12 @@ export interface IGitCommandManager {
   tryDisableAutomaticGarbageCollection(): Promise<boolean>;
   tryGetFetchUrl(): Promise<string>;
   tryReset(): Promise<boolean>;
+  execGit(
+    args: string[],
+    allowAllExitCodes: boolean | undefined,
+    silent: boolean | undefined,
+    customListeners: any | undefined
+  ): Promise<GitExecOutput>;
 }
 
 export interface IRemoteDetail {
@@ -116,32 +122,15 @@ export interface IWorkingBaseAndType {
   workingBaseType: 'commit' | 'branch' | 'pull';
 }
 
-export async function getGitCommandManager(
-  settings: IGitSourceSettings
-): Promise<IGitCommandManager | undefined> {
-  core.info(`Working directory is '${settings.repositoryPath}'`);
-  try {
-    return await createGitCommandManager(settings.repositoryPath, false, false);
-  } catch (err) {
-    // Git is required for LFS
-    if (settings.lfs) {
-      throw err;
-    }
-
-    // Otherwise fallback to REST API
-    return undefined;
-  }
-}
-
 export async function createGitCommandManager(
   workingDirectory: string,
-  lfs: boolean,
-  doSparseCheckout: boolean
+  lfs?: boolean,
+  doSparseCheckout?: boolean
 ): Promise<IGitCommandManager> {
   return await GitCommandManager.createGitCommandManager(
     workingDirectory,
-    lfs,
-    doSparseCheckout
+    lfs ?? false,
+    doSparseCheckout ?? false
   );
 }
 
@@ -763,7 +752,7 @@ export class GitCommandManager implements IGitCommandManager {
     return result;
   }
 
-  private async execGit(
+  async execGit(
     args: string[],
     allowAllExitCodes: boolean = false,
     silent: boolean = false,

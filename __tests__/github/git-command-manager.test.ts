@@ -61,20 +61,7 @@ jest.mock('@actions/io', () => {
 });
 
 describe('Test git-command-manager.ts', (): void => {
-  describe('Test create function', (): void => {
-    it('should create GitCommandManager instance', async (): Promise<void> => {
-      GitCommandManager.create = gitCommandManagerCreateFunctionMock;
-
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManager.create(workingDirectory);
-
-      expect(gitCommandManager).toBeDefined();
-      expect(GitCommandManager).toHaveBeenCalledTimes(1);
-      expect(initMock).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('Test init function', (): void => {
+  describe('Test createGitCommandManager function', (): void => {
     let GitCommandManagerRealModule: typeof import('../../src/github/git-command-manager');
 
     beforeAll((): void => {
@@ -90,6 +77,8 @@ describe('Test git-command-manager.ts', (): void => {
       expect(gitCommandManager).toBeDefined();
       expect(infoSpy).toHaveBeenCalledTimes(2);
       expect(gitCommandManager.workingDirectory).toBe(workingDirectory);
+      expect(gitCommandManager.lfs).toBe(false);
+      expect(gitCommandManager.doSparseCheckout).toBe(true);
       expect(gitCommandManager.gitPath).toBe('/usr/bin/git');
     });
   });
@@ -128,8 +117,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -165,8 +154,8 @@ describe('Test git-command-manager.ts', (): void => {
       const remoteUrl: string =
         'https://github.com/3dwardCh3nG/github-pull-request.git';
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(workingDir);
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(workingDir);
 
       const remoteDetail: any = gitCommandManager.getRemoteDetail(remoteUrl);
 
@@ -181,8 +170,8 @@ describe('Test git-command-manager.ts', (): void => {
       const remoteUrl: string =
         'https://github.com/3dwardCh3nG/github-pull-request.git';
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(workingDir);
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(workingDir);
 
       expect(() => gitCommandManager.getRemoteDetail(remoteUrl)).toThrow(
         new Error('Not a valid GitHub Service URL')
@@ -193,8 +182,8 @@ describe('Test git-command-manager.ts', (): void => {
       const remoteUrl: string =
         'https://gitlab.com/3dwardCh3nG/github-pull-request.git';
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(workingDir);
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(workingDir);
 
       expect(() => gitCommandManager.getRemoteDetail(remoteUrl)).toThrow(
         new Error(
@@ -221,8 +210,8 @@ describe('Test git-command-manager.ts', (): void => {
     it('should success and return working base and type when currently on Pull', async (): Promise<void> => {
       process.env['GITHUB_REF'] = 'refs/pull/1/merge';
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -256,8 +245,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -304,8 +293,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -353,8 +342,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -387,8 +376,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -422,8 +411,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -461,8 +450,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -487,8 +476,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -538,8 +527,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -578,8 +567,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -615,112 +604,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
-          workingDirectory
-        );
-
-      await gitCommandManager.checkout(ref);
-
-      expect(execMock).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('Test switch function', (): void => {
-    const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../../src/github/git-command-manager');
-
-    beforeAll((): void => {
-      GitCommandManagerRealModule = jest.requireActual(
-        '../../src/github/git-command-manager'
-      );
-    });
-
-    it('should success and return true when switch to a branch', async (): Promise<void> => {
-      const ref: string = 'this-is-the-develop-branch';
-      const execMock: jest.SpyInstance = execSpy.mockImplementation(
-        async (gitPath: string, args: string[]): Promise<number> => {
-          if (
-            args.length === 2 &&
-            args[0] === 'switch' &&
-            args[1] === ref &&
-            gitPath === '/usr/bin/git'
-          ) {
-            return new Promise(resolve => resolve(0));
-          }
-          return new Promise(resolve => resolve(1));
-        }
-      );
-
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
-          workingDirectory
-        );
-
-      await gitCommandManager.switch(ref);
-
-      expect(execMock).toHaveBeenCalledTimes(1);
-    });
-
-    it('should success and return true when checkout to a branch with options and startpoint', async (): Promise<void> => {
-      const ref: string = 'this-is-the-develop-branch';
-      const startPoint: string = 'HEAD';
-      const execMock: jest.SpyInstance = execSpy.mockImplementation(
-        async (gitPath: string, args: string[]): Promise<number> => {
-          if (
-            args.length === 5 &&
-            args[0] === 'switch' &&
-            args[1] === '-q' &&
-            args[2] === '-c' &&
-            args[3] === ref &&
-            args[4] === startPoint &&
-            gitPath === '/usr/bin/git'
-          ) {
-            return new Promise(resolve => resolve(0));
-          }
-          return new Promise(resolve => resolve(1));
-        }
-      );
-
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
-          workingDirectory
-        );
-
-      await gitCommandManager.switch(ref, ['-q'], startPoint);
-
-      expect(execMock).toHaveBeenCalledTimes(1);
-    });
-
-    it('should success and return true when checkout to a branch with no startPoint given', async (): Promise<void> => {
-      const ref: string = 'this-is-the-develop-branch';
-      const execMock: jest.SpyInstance = execSpy.mockImplementation(
-        async (
-          gitPath: string,
-          args: string[],
-          options: exec.ExecOptions
-        ): Promise<number> => {
-          if (
-            args.length === 5 &&
-            args[0] === 'checkout' &&
-            args[1] === '--progress' &&
-            args[2] === '--force' &&
-            args[3] === ref &&
-            args[4] === '--' &&
-            gitPath === '/usr/bin/git'
-          ) {
-            options.listeners?.stdout?.call(
-              options.listeners.stdout,
-              Buffer.from('this-is-the-develop-branch')
-            );
-            return new Promise(resolve => resolve(0));
-          }
-          return new Promise(resolve => resolve(1));
-        }
-      );
-
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -764,8 +649,10 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(workingDir);
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
+          workingDirectory
+        );
 
       const remote: string = 'origin';
       const branch: string = 'develop';
@@ -798,8 +685,10 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(workingDir);
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
+          workingDirectory
+        );
 
       const remote: string = 'git';
       const branch: string = 'develop';
@@ -815,8 +704,10 @@ describe('Test git-command-manager.ts', (): void => {
         throw new Error(ErrorMessages.FILE_EXISTS_CHECK_ERROR);
       });
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(workingDir);
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
+          workingDirectory
+        );
 
       const remote: string = 'origin';
       const branch: string = 'develop';
@@ -860,16 +751,17 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
       const branch: string = 'develop';
 
-      await gitCommandManager.fetchRemote([
-        `${branch}:refs/remotes/origin/${branch}`
-      ]);
+      await gitCommandManager.fetchRemote(
+        [`${branch}:refs/remotes/origin/${branch}`],
+        {}
+      );
 
       expect(execMock).toHaveBeenCalledTimes(1);
     });
@@ -900,8 +792,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -947,8 +839,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -990,8 +882,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1041,8 +933,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1084,8 +976,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1150,8 +1042,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1202,8 +1094,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1254,8 +1146,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1293,8 +1185,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1318,8 +1210,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1353,8 +1245,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1378,8 +1270,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1415,8 +1307,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1444,8 +1336,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1453,84 +1345,6 @@ describe('Test git-command-manager.ts', (): void => {
 
       await gitCommandManager.deleteBranch(branchName, ['--verbose']);
 
-      expect(execMock).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('Test status function', (): void => {
-    const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../../src/github/git-command-manager');
-
-    beforeAll((): void => {
-      GitCommandManagerRealModule = jest.requireActual(
-        '../../src/github/git-command-manager'
-      );
-    });
-
-    it('should success when status with no options', async (): Promise<void> => {
-      const execMock: jest.SpyInstance = execSpy.mockImplementation(
-        async (
-          gitPath: string,
-          args: string[],
-          options: exec.ExecOptions
-        ): Promise<number> => {
-          if (
-            args.length === 1 &&
-            args[0] === 'status' &&
-            gitPath === '/usr/bin/git'
-          ) {
-            options.listeners?.stdout?.call(
-              options.listeners.stdout,
-              Buffer.from('this is status')
-            );
-            return new Promise(resolve => resolve(0));
-          }
-          return new Promise(resolve => resolve(1));
-        }
-      );
-
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
-          workingDirectory
-        );
-
-      const status: string = await gitCommandManager.status();
-
-      expect(status).toBe('this is status');
-      expect(execMock).toHaveBeenCalledTimes(1);
-    });
-
-    it('should success when status with options', async (): Promise<void> => {
-      const execMock: jest.SpyInstance = execSpy.mockImplementation(
-        async (
-          gitPath: string,
-          args: string[],
-          options: exec.ExecOptions
-        ): Promise<number> => {
-          if (
-            args.length === 2 &&
-            args[0] === 'status' &&
-            args[1] === '--verbose' &&
-            gitPath === '/usr/bin/git'
-          ) {
-            options.listeners?.stdout?.call(
-              options.listeners.stdout,
-              Buffer.from('this is status with verbose')
-            );
-            return new Promise(resolve => resolve(0));
-          }
-          return new Promise(resolve => resolve(1));
-        }
-      );
-
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
-          workingDirectory
-        );
-
-      const status: string = await gitCommandManager.status(['--verbose']);
-
-      expect(status).toBe('this is status with verbose');
       expect(execMock).toHaveBeenCalledTimes(1);
     });
   });
@@ -1560,8 +1374,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1587,8 +1401,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1613,8 +1427,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1656,8 +1470,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1683,8 +1497,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1710,8 +1524,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1751,8 +1565,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1783,8 +1597,8 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
@@ -1815,162 +1629,14 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
       const result: boolean = await gitCommandManager.configExists(configKey);
 
       expect(result).toBe(true);
-      expect(execMock).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('Test unsetConfig function', (): void => {
-    const configKey: string = 'user.name';
-
-    const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../../src/github/git-command-manager');
-
-    beforeAll((): void => {
-      GitCommandManagerRealModule = jest.requireActual(
-        '../../src/github/git-command-manager'
-      );
-    });
-
-    it('should return true when unsetConfig with globalConfig to be true', async (): Promise<void> => {
-      const execMock: jest.SpyInstance = execSpy.mockImplementation(
-        async (gitPath: string, args: string[]): Promise<number> => {
-          if (
-            args.length === 4 &&
-            args[0] === 'config' &&
-            args[1] === '--global' &&
-            args[2] === '--unset-all' &&
-            args[3] === configKey &&
-            gitPath === '/usr/bin/git'
-          ) {
-            return new Promise(resolve => resolve(0));
-          }
-          return new Promise(resolve => resolve(1));
-        }
-      );
-
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
-          workingDirectory
-        );
-
-      const result: boolean = await gitCommandManager.unsetConfig(
-        configKey,
-        true
-      );
-
-      expect(result).toBe(true);
-      expect(execMock).toHaveBeenCalledTimes(1);
-    });
-
-    it('should return false when unsetConfig with globalConfig to be false', async (): Promise<void> => {
-      const execMock: jest.SpyInstance = execSpy.mockImplementation(
-        async (gitPath: string, args: string[]): Promise<number> => {
-          if (
-            args.length === 4 &&
-            args[0] === 'config' &&
-            args[1] === '--local' &&
-            args[2] === '--unset-all' &&
-            args[3] === configKey &&
-            gitPath === '/usr/bin/git'
-          ) {
-            return new Promise(resolve => resolve(1));
-          }
-          return new Promise(resolve => resolve(1));
-        }
-      );
-
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
-          workingDirectory
-        );
-
-      const result: boolean = await gitCommandManager.unsetConfig(
-        configKey,
-        false
-      );
-
-      expect(result).toBe(false);
-      expect(execMock).toHaveBeenCalledTimes(1);
-    });
-
-    it('should return true when unsetConfig with globalConfig is not provided', async (): Promise<void> => {
-      const execMock: jest.SpyInstance = execSpy.mockImplementation(
-        async (gitPath: string, args: string[]): Promise<number> => {
-          if (
-            args.length === 4 &&
-            args[0] === 'config' &&
-            args[1] === '--local' &&
-            args[2] === '--unset-all' &&
-            args[3] === configKey &&
-            gitPath === '/usr/bin/git'
-          ) {
-            return new Promise(resolve => resolve(0));
-          }
-          return new Promise(resolve => resolve(1));
-        }
-      );
-
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
-          workingDirectory
-        );
-
-      const result: boolean = await gitCommandManager.unsetConfig(configKey);
-
-      expect(result).toBe(true);
-      expect(execMock).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('Test getGitDirectory function', (): void => {
-    const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
-    let GitCommandManagerRealModule: typeof import('../../src/github/git-command-manager');
-
-    beforeAll((): void => {
-      GitCommandManagerRealModule = jest.requireActual(
-        '../../src/github/git-command-manager'
-      );
-    });
-
-    it('should return git directory when getGitDirectory with globalConfig to be true', async (): Promise<void> => {
-      const execMock: jest.SpyInstance = execSpy.mockImplementation(
-        async (
-          gitPath: string,
-          args: string[],
-          options: exec.ExecOptions
-        ): Promise<number> => {
-          if (
-            args.length === 2 &&
-            args[0] === 'rev-parse' &&
-            args[1] === '--git-dir' &&
-            gitPath === '/usr/bin/git'
-          ) {
-            options.listeners?.stdout?.call(
-              options.listeners.stdout,
-              Buffer.from('.git')
-            );
-            return new Promise(resolve => resolve(0));
-          }
-          return new Promise(resolve => resolve(1));
-        }
-      );
-
-      const gitCommandManager: GitCommandManager =
-        await GitCommandManagerRealModule.GitCommandManager.create(
-          workingDirectory
-        );
-
-      const gitDirectory: string = await gitCommandManager.getGitDirectory();
-
-      expect(gitDirectory).toBe('.git');
       expect(execMock).toHaveBeenCalledTimes(1);
     });
   });
@@ -2009,15 +1675,13 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: any =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
-      const gitDirectory: string = await gitCommandManager.revParse(
-        '--git-dir',
-        ['--sq']
-      );
+      const gitDirectory: string =
+        await gitCommandManager.revParse('--git-dir');
 
       expect(gitDirectory).toBe('.git');
       expect(execMock).toHaveBeenCalledTimes(1);
@@ -2057,15 +1721,17 @@ describe('Test git-command-manager.ts', (): void => {
         }
       );
 
-      const gitCommandManager: any =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
-      const output: GitExecOutput = await gitCommandManager.execGit([
-        'rev-parse',
-        '--git-dir'
-      ]);
+      const output: GitExecOutput = await gitCommandManager.execGit(
+        ['rev-parse', '--git-dir'],
+        undefined,
+        undefined,
+        undefined
+      );
 
       expect(output.getDebug()).toBe('this is debug data');
       expect(execMock).toHaveBeenCalledTimes(1);
@@ -2082,14 +1748,14 @@ describe('Test git-command-manager.ts', (): void => {
     });
 
     it('should success when setEnvironmentVariable', async (): Promise<void> => {
-      const gitCommandManager: any =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 
       gitCommandManager.setEnvironmentVariable('key', 'value');
 
-      expect(gitCommandManager._gitEnv['key']).toBe('value');
+      expect(gitCommandManager.gitEnv['key']).toBe('value');
     });
   });
 
@@ -2103,8 +1769,8 @@ describe('Test git-command-manager.ts', (): void => {
     });
 
     it('should success when removeEnvironmentVariable', async (): Promise<void> => {
-      const gitCommandManager: any =
-        await GitCommandManagerRealModule.GitCommandManager.create(
+      const gitCommandManager: IGitCommandManager =
+        await GitCommandManagerRealModule.createGitCommandManager(
           workingDirectory
         );
 

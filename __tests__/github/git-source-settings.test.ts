@@ -1,7 +1,7 @@
 import {
   GitSourceSettings,
   IGitSourceSettings
-} from '../src/git-source-settings';
+} from '../../src/github/git-source-settings';
 
 const repositoryPath: string = 'repositoryPath';
 const repositoryOwner: string = 'repositoryOwner';
@@ -21,6 +21,9 @@ describe('Test git-source-settings.ts', (): void => {
         repositoryPath,
         repositoryOwner,
         repositoryName,
+        false,
+        false,
+        false,
         authToken,
         githubServerUrl,
         workflowOrganizationId,
@@ -33,6 +36,9 @@ describe('Test git-source-settings.ts', (): void => {
       expect(gitSourceSettings.repositoryPath).toEqual(repositoryPath);
       expect(gitSourceSettings.repositoryOwner).toEqual(repositoryOwner);
       expect(gitSourceSettings.repositoryName).toEqual(repositoryName);
+      expect(gitSourceSettings.lfs).toEqual(false);
+      expect(gitSourceSettings.submodules).toEqual(false);
+      expect(gitSourceSettings.nestedSubmodules).toEqual(false);
       expect(gitSourceSettings.authToken).toEqual(authToken);
       expect(gitSourceSettings.githubServerUrl).toEqual(githubServerUrl);
       expect(gitSourceSettings.workflowOrganizationId).toEqual(
@@ -49,6 +55,9 @@ describe('Test git-source-settings.ts', (): void => {
         repositoryPath,
         repositoryOwner,
         repositoryName,
+        false,
+        false,
+        false,
         authToken,
         undefined,
         undefined,
@@ -61,6 +70,9 @@ describe('Test git-source-settings.ts', (): void => {
       expect(gitSourceSettings.repositoryPath).toEqual(repositoryPath);
       expect(gitSourceSettings.repositoryOwner).toEqual(repositoryOwner);
       expect(gitSourceSettings.repositoryName).toEqual(repositoryName);
+      expect(gitSourceSettings.lfs).toEqual(false);
+      expect(gitSourceSettings.submodules).toEqual(false);
+      expect(gitSourceSettings.nestedSubmodules).toEqual(false);
       expect(gitSourceSettings.authToken).toEqual(authToken);
       expect(gitSourceSettings.githubServerUrl).not.toBeDefined();
       expect(gitSourceSettings.workflowOrganizationId).not.toBeDefined();

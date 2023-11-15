@@ -1,32 +1,36 @@
 import { IRetryHelper, RetryHelper } from './retry-helper';
 
-const defaultMaxAttempts: number = 3;
-const defaultMinSeconds: number = 10;
-const defaultMaxSeconds: number = 20;
+export const defaultMaxAttempts: number = 3;
+export const defaultMinSeconds: number = 10;
+export const defaultMaxSeconds: number = 20;
+
+export function createRetryHelperWithDefaults(): IRetryHelper {
+  return createRetryHelper();
+}
 
 export function createRetryHelper(
-  maxAttempts: number,
-  minSeconds: number | undefined,
-  maxSeconds: number | undefined,
-  attemptsInterval: number | undefined
+  maxAttempts?: number,
+  minSeconds?: number,
+  maxSeconds?: number,
+  attemptsInterval?: number
 ): IRetryHelper {
-  return new RetryHelper(maxAttempts, minSeconds, maxSeconds, attemptsInterval);
+  return new RetryHelper(
+    maxAttempts === undefined ? defaultMaxAttempts : Math.floor(maxAttempts),
+    minSeconds === undefined ? defaultMinSeconds : Math.floor(minSeconds),
+    maxSeconds === undefined ? defaultMaxSeconds : Math.floor(maxSeconds),
+    attemptsInterval === undefined ? undefined : Math.floor(attemptsInterval)
+  );
 }
 
 export async function executeWithDefaults<T>(
   action: (...vars: unknown[]) => Promise<T>
 ): Promise<T> {
-  const retryHelper: IRetryHelper = createRetryHelper(
-    defaultMaxAttempts,
-    defaultMinSeconds,
-    defaultMaxSeconds,
-    undefined
-  );
+  const retryHelper: IRetryHelper = createRetryHelperWithDefaults();
   return await retryHelper.execute(action);
 }
 
 export async function executeWithCustomised<T>(
-  maxAttempts: number,
+  maxAttempts: number | undefined,
   minSeconds: number | undefined,
   maxSeconds: number | undefined,
   attemptsInterval: number | undefined,

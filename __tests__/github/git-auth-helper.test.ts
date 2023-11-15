@@ -2,14 +2,18 @@ import * as core from '@actions/core';
 import * as io from '@actions/io';
 import * as exec from '@actions/exec';
 import {
+  createGitCommandManager,
   GitCommandManager,
   IGitCommandManager
-} from '../src/git-command-manager';
+} from '../../src/github/git-command-manager';
 import {
   GitSourceSettings,
   IGitSourceSettings
-} from '../src/git-source-settings';
-import { GitAuthHelper, IGitAuthHelper } from '../src/git-auth-helper';
+} from '../../src/github/git-source-settings';
+import {
+  createGitAuthHelper,
+  IGitAuthHelper
+} from '../../src/github/git-auth-helper';
 import * as assert from 'assert';
 import * as os from 'os';
 import { PathLike } from 'fs';
@@ -25,6 +29,9 @@ const gitSourceSettings: IGitSourceSettings = new GitSourceSettings(
   repositoryPath,
   repositoryOwner,
   repositoryName,
+  false,
+  false,
+  false,
   authToken,
   undefined,
   '1234567890',
@@ -65,7 +72,8 @@ const setEnvironmentVariableMock: jest.Mock<any, any, any> = jest
   .fn()
   .mockImplementation((): void => {});
 const gitCommandManagerMock: GitCommandManager = {
-  ...jest.requireActual('../src/git-command-manager').GitCommandManager,
+  ...jest.requireActual('../../src/github/git-command-manager')
+    .GitCommandManager,
   config: configMock,
   configExists: configExistsMock,
   unsetConfig: unsetConfigMock,
@@ -73,7 +81,7 @@ const gitCommandManagerMock: GitCommandManager = {
   setEnvironmentVariable: setEnvironmentVariableMock,
   init: jest.fn()
 } as GitCommandManager;
-jest.mock('../src/git-command-manager', () => {
+jest.mock('../../src/github/git-command-manager', () => {
   return {
     GitCommandManager: jest.fn().mockImplementation(() => {
       return gitCommandManagerMock;
@@ -83,13 +91,6 @@ jest.mock('../src/git-command-manager', () => {
     })
   };
 });
-const gitCommandManagerCreateFunctionMock: jest.Mock<any, any> = jest
-  .fn()
-  .mockImplementation(async (workingDirectory: string) => {
-    const gitCommandManager: GitCommandManager = new GitCommandManager();
-    await gitCommandManager.init(workingDirectory);
-    return gitCommandManager;
-  });
 const gitConfigContent: string = `[core]
   \trepositoryformatversion = 0
   \tfilemode = true
@@ -152,8 +153,11 @@ describe('Test git-auth-helper.ts', (): void => {
   let gitCommanderManager: IGitCommandManager;
 
   beforeAll(async (): Promise<void> => {
-    GitCommandManager.create = gitCommandManagerCreateFunctionMock;
-    gitCommanderManager = await GitCommandManager.create(repositoryPath);
+    gitCommanderManager = await createGitCommandManager(
+      repositoryPath,
+      false,
+      false
+    );
   });
 
   describe('Test constructor', (): void => {
@@ -167,7 +171,7 @@ describe('Test git-auth-helper.ts', (): void => {
         'utf8'
       ).toString('base64');
 
-      const gitAuthHelper: IGitAuthHelper = new GitAuthHelper(
+      const gitAuthHelper: IGitAuthHelper = createGitAuthHelper(
         gitCommanderManager,
         gitSourceSettings
       );
@@ -184,8 +188,8 @@ describe('Test git-auth-helper.ts', (): void => {
         `url.https://github.com/.insteadOf`
       );
       expect(gitAuthHelper.insteadOfValues).toEqual([
-        'git@github.com:',
-        'org-1234567890@github.com:'
+        'git@git.com:',
+        'org-1234567890@git.com:'
       ]);
     });
 
@@ -193,7 +197,7 @@ describe('Test git-auth-helper.ts', (): void => {
       const githubServerUrl: string = 'https://github.com.au';
       process.env['GITHUB_SERVER_URL'] = githubServerUrl;
 
-      const gitAuthHelper: IGitAuthHelper = new GitAuthHelper(
+      const gitAuthHelper: IGitAuthHelper = createGitAuthHelper(
         gitCommanderManager,
         gitSourceSettings
       );
@@ -242,7 +246,7 @@ describe('Test git-auth-helper.ts', (): void => {
     });
 
     it('should call removeToken and configureToken and success', async (): Promise<void> => {
-      const gitAuthHelper: IGitAuthHelper = new GitAuthHelper(
+      const gitAuthHelper: IGitAuthHelper = createGitAuthHelper(
         gitCommanderManager,
         gitSourceSettings
       );
@@ -287,6 +291,9 @@ describe('Test git-auth-helper.ts', (): void => {
           repositoryPath,
           repositoryOwner,
           repositoryName,
+          false,
+          false,
+          false,
           authToken,
           githubServerUrl,
           '1234567890',
@@ -296,7 +303,7 @@ describe('Test git-auth-helper.ts', (): void => {
           persistCredentials
         );
 
-      const gitAuthHelper: IGitAuthHelper = new GitAuthHelper(
+      const gitAuthHelper: IGitAuthHelper = createGitAuthHelper(
         gitCommanderManager,
         gitSourceSettingsOverride
       );
@@ -424,6 +431,9 @@ describe('Test git-auth-helper.ts', (): void => {
           repositoryPath,
           repositoryOwner,
           repositoryName,
+          false,
+          false,
+          false,
           authToken,
           undefined,
           '1234567890',
@@ -433,7 +443,7 @@ describe('Test git-auth-helper.ts', (): void => {
           persistCredentials
         );
 
-      const gitAuthHelper: IGitAuthHelper = new GitAuthHelper(
+      const gitAuthHelper: IGitAuthHelper = createGitAuthHelper(
         gitCommanderManager,
         gitSourceSettingsOverride
       );
@@ -445,7 +455,6 @@ describe('Test git-auth-helper.ts', (): void => {
         .mockImplementation(async (): Promise<number> => {
           return Promise.resolve(0);
         });
-      jest.spyOn(gitAuthHelper, 'IS_WINDOWS', 'get').mockReturnValue(true);
 
       await gitAuthHelper.configureAuth();
 
@@ -524,6 +533,9 @@ describe('Test git-auth-helper.ts', (): void => {
           repositoryPath,
           repositoryOwner,
           repositoryName,
+          false,
+          false,
+          false,
           authToken,
           undefined,
           '1234567890',
@@ -533,7 +545,7 @@ describe('Test git-auth-helper.ts', (): void => {
           persistCredentials
         );
 
-      const gitAuthHelper: IGitAuthHelper = new GitAuthHelper(
+      const gitAuthHelper: IGitAuthHelper = createGitAuthHelper(
         gitCommanderManager,
         gitSourceSettingsOverride
       );
@@ -590,6 +602,9 @@ describe('Test git-auth-helper.ts', (): void => {
           repositoryPath,
           repositoryOwner,
           repositoryName,
+          false,
+          false,
+          false,
           authToken,
           undefined,
           '1234567890',
@@ -599,7 +614,7 @@ describe('Test git-auth-helper.ts', (): void => {
           persistCredentials
         );
 
-      const gitAuthHelper: IGitAuthHelper = new GitAuthHelper(
+      const gitAuthHelper: IGitAuthHelper = createGitAuthHelper(
         gitCommanderManager,
         gitSourceSettingsOverride
       );
@@ -652,6 +667,9 @@ describe('Test git-auth-helper.ts', (): void => {
           repositoryPath,
           repositoryOwner,
           repositoryName,
+          false,
+          false,
+          false,
           authToken,
           undefined,
           '1234567890',
@@ -661,7 +679,7 @@ describe('Test git-auth-helper.ts', (): void => {
           persistCredentials
         );
 
-      const gitAuthHelper: IGitAuthHelper = new GitAuthHelper(
+      const gitAuthHelper: IGitAuthHelper = createGitAuthHelper(
         gitCommanderManager,
         gitSourceSettingsOverride
       );
@@ -684,7 +702,7 @@ describe('Test git-auth-helper.ts', (): void => {
 
   describe('Test configureToken function', (): void => {
     it('should call removeToken and configureToken and success', async (): Promise<void> => {
-      const gitAuthHelper: any = new GitAuthHelper(
+      const gitAuthHelper: any = createGitAuthHelper(
         gitCommanderManager,
         gitSourceSettings
       );

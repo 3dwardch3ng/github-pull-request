@@ -1,5 +1,6 @@
 import {
   createRetryHelper,
+  createRetryHelperWithDefaults,
   executeWithCustomised,
   executeWithDefaults
 } from '../src/retry-helper-wrapper';
@@ -18,7 +19,15 @@ jest.mock('../src/retry-helper', () => {
 describe('Test retry-helper-wrapper.ts', (): void => {
   describe('Test createRetryHelper function', (): void => {
     it('should create RetryHelper instance with given values', (): void => {
-      createRetryHelper(3, 10, 20, undefined);
+      createRetryHelper(2, 15, 20, undefined);
+      expect(RetryHelper).toHaveBeenCalledTimes(1);
+      expect(RetryHelper).toHaveBeenCalledWith(2, 15, 20, undefined);
+    });
+  });
+
+  describe('Test createRetryHelperWithDefaults function', (): void => {
+    it('should create RetryHelper instance with default values', (): void => {
+      createRetryHelperWithDefaults();
       expect(RetryHelper).toHaveBeenCalledTimes(1);
       expect(RetryHelper).toHaveBeenCalledWith(3, 10, 20, undefined);
     });

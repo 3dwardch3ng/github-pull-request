@@ -1,4 +1,4 @@
-import { GitExecOutput } from '../src/git-exec-output';
+import { GitExecOutput } from '../../src/github/git-exec-output';
 
 describe('Test git-exec-output.ts', (): void => {
   let gitExecOutputs: GitExecOutput;

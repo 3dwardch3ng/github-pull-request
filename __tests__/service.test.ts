@@ -7,17 +7,22 @@ import {
 } from '../src/service';
 import { WorkflowUtils } from '../src/workflow-utils';
 import { Pull } from '../src/github-client';
-import { GitCommandManager } from '../src/git-command-manager';
+import * as core from '@actions/core';
+import { AnnotationProperties } from '@actions/core';
+import { IRetryHelper, RetryHelper } from '../src/retry-helper';
+import * as RetryHelperWrapper from '../src/retry-helper-wrapper';
+import {
+  createRetryHelper,
+  defaultMaxAttempts,
+  defaultMaxSeconds,
+  defaultMinSeconds
+} from '../src/retry-helper-wrapper';
+import { ErrorMessages, WarningMessages } from '../src/message';
+import { createGitCommandManager } from '../src/github/git-command-manager';
 import {
   GitSourceSettings,
   IGitSourceSettings
-} from '../src/git-source-settings';
-import * as core from '@actions/core';
-import { IRetryHelper, RetryHelper } from '../src/retry-helper';
-import * as RetryHelperWrapper from '../src/retry-helper-wrapper';
-import { createRetryHelper } from '../src/retry-helper-wrapper';
-import { AnnotationProperties } from '@actions/core';
-import { ErrorMessages, WarningMessages } from '../src/message';
+} from '../src/github/git-source-settings';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const infoMock: jest.SpyInstance<void, [message: string]> = jest.spyOn(
@@ -58,9 +63,7 @@ jest.mock('../src/workflow-utils', () => {
 const gitCommandManagerCreateFunctionMock: jest.Mock<any, any> = jest
   .fn()
   .mockImplementation(async (workingDir: string) => {
-    const gitCommandManager: GitCommandManager = new GitCommandManager();
-    await gitCommandManager.init(workingDir);
-    return gitCommandManager;
+    return await createGitCommandManager(workingDir, false, false);
   });
 const initMock: jest.Mock<any, any, any> = jest.fn();
 const getRepoRemoteUrlMock: jest.Mock<any, any, any> = jest.fn();
@@ -80,9 +83,9 @@ const hasDiffMock: jest.Mock<any, any, any> = jest.fn();
 const isEvenMock: jest.Mock<any, any, any> = jest.fn();
 const fetchAllMock: jest.Mock<any, any, any> = jest.fn();
 const switchMock: jest.Mock<any, any, any> = jest.fn();
-jest.mock('../src/git-command-manager', () => {
+jest.mock('../src/github/git-command-manager', () => {
   return {
-    ...jest.requireActual('../src/git-command-manager'),
+    ...jest.requireActual('../src/github/git-command-manager'),
     GitCommandManager: jest.fn().mockImplementation(() => {
       return {
         init: initMock,
@@ -134,7 +137,7 @@ jest.mock('../src/github-client', () => {
 });
 const configureAuthMock: jest.Mock<any, any, any> = jest.fn();
 const removeAuthMock: jest.Mock<any, any, any> = jest.fn();
-jest.mock('../src/git-auth-helper', () => {
+jest.mock('../src/github/git-auth-helper', () => {
   return {
     GitAuthHelper: jest.fn().mockImplementation(() => {
       return {
@@ -144,7 +147,7 @@ jest.mock('../src/git-auth-helper', () => {
     })
   };
 });
-jest.mock('../src/git-source-settings', () => {
+jest.mock('../src/github/git-source-settings', () => {
   return {
     GitSourceSettings: jest.fn().mockImplementation(() => {
       return {
@@ -199,10 +202,9 @@ describe('Test service.ts', (): void => {
     beforeAll((): void => {
       ServiceModule = jest.requireActual('../src/service');
       getRepoPathMock.mockReturnValue('repoPath');
-      GitCommandManager.create = gitCommandManagerCreateFunctionMock;
       getRepoRemoteUrlMock.mockReturnValue('repoRemoteUrl');
       getRemoteDetailMock.mockReturnValue({
-        hostname: 'www.github.com',
+        hostname: 'www.git.com',
         protocol: 'HTTPS',
         repository: '3dwardch3ng/create-pull-request'
       });
@@ -550,7 +552,7 @@ describe('Test service.ts', (): void => {
           .spyOn(RetryHelperWrapper, 'executeWithCustomised')
           .mockImplementation(
             async (
-              maxAttempts: number,
+              maxAttempts: number | undefined,
               minSeconds: number | undefined,
               maxSeconds: number | undefined,
               attemptsInterval: number | undefined,
@@ -569,16 +571,24 @@ describe('Test service.ts', (): void => {
           .spyOn(RetryHelperWrapper, 'createRetryHelper')
           .mockImplementation(
             (
-              maxAttempts: number,
+              maxAttempts: number | undefined,
               minSeconds: number | undefined,
               maxSeconds: number | undefined,
               attemptsInterval: number | undefined
             ): RetryHelper => {
               return new RetryHelper(
-                maxAttempts,
-                minSeconds,
-                maxSeconds,
-                attemptsInterval
+                maxAttempts === undefined
+                  ? defaultMaxAttempts
+                  : Math.floor(maxAttempts),
+                minSeconds === undefined
+                  ? defaultMinSeconds
+                  : Math.floor(minSeconds),
+                maxSeconds === undefined
+                  ? defaultMaxSeconds
+                  : Math.floor(maxSeconds),
+                attemptsInterval === undefined
+                  ? undefined
+                  : Math.floor(attemptsInterval)
               );
             }
           );
@@ -626,7 +636,7 @@ describe('Test service.ts', (): void => {
           .spyOn(RetryHelperWrapper, 'executeWithCustomised')
           .mockImplementation(
             async (
-              maxAttempts: number,
+              maxAttempts: number | undefined,
               minSeconds: number | undefined,
               maxSeconds: number | undefined,
               attemptsInterval: number | undefined,
@@ -645,16 +655,24 @@ describe('Test service.ts', (): void => {
           .spyOn(RetryHelperWrapper, 'createRetryHelper')
           .mockImplementation(
             (
-              maxAttempts: number,
+              maxAttempts: number | undefined,
               minSeconds: number | undefined,
               maxSeconds: number | undefined,
               attemptsInterval: number | undefined
             ): RetryHelper => {
               return new RetryHelper(
-                maxAttempts,
-                minSeconds,
-                maxSeconds,
-                attemptsInterval
+                maxAttempts === undefined
+                  ? defaultMaxAttempts
+                  : Math.floor(maxAttempts),
+                minSeconds === undefined
+                  ? defaultMinSeconds
+                  : Math.floor(minSeconds),
+                maxSeconds === undefined
+                  ? defaultMaxSeconds
+                  : Math.floor(maxSeconds),
+                attemptsInterval === undefined
+                  ? undefined
+                  : Math.floor(attemptsInterval)
               );
             }
           );
@@ -683,9 +701,9 @@ describe('Test service.ts', (): void => {
 });
 
 function setRequiredProcessEnvValues(): void {
-  process.env['INPUT_GITHUB_TOKEN'] = 'github-token';
+  process.env['INPUT_GITHUB_TOKEN'] = 'git-token';
   process.env['INPUT_REPO_OWNER'] = '3dwardch3ng';
-  process.env['INPUT_REPO_NAME'] = 'github-pull-request';
+  process.env['INPUT_REPO_NAME'] = 'git-pull-request';
   process.env['INPUT_SOURCE_BRANCH'] = 'source-branch';
   process.env['INPUT_TARGET_BRANCH'] = 'target-branch';
   process.env['INPUT_PR_TITLE'] = 'pr-title';

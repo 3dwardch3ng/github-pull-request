@@ -1,23 +1,26 @@
-import * as assert from 'assert';
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import * as promises from 'fs/promises';
 import * as io from '@actions/io';
+import path from 'path';
+import * as assert from 'assert';
+import fs from 'fs';
 import * as os from 'os';
-import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 import { IGitCommandManager } from './git-command-manager';
 import { IGitSourceSettings } from './git-source-settings';
-import { URL } from 'url';
-import { v4 as uuidv4 } from 'uuid';
-import { Constants } from './constants';
+import * as regexpHelper from './regexp-helper';
+import * as stateHelper from './state-helper';
+import { Constants } from '../constants';
+
+const IS_WINDOWS: boolean = process.platform === 'win32';
+const SSH_COMMAND_KEY: string = 'core.sshCommand';
 
 export interface IGitAuthHelper {
-  readonly IS_WINDOWS: boolean;
-  readonly SSH_COMMAND_KEY: string;
   readonly git: IGitCommandManager;
   readonly settings: IGitSourceSettings;
   readonly tokenConfigKey: string;
   readonly tokenConfigValue: string;
+  readonly tokenPlaceholderConfigValue: string;
   readonly insteadOfKey: string;
   readonly insteadOfValues: string[];
   readonly sshCommand: string;
@@ -27,46 +30,53 @@ export interface IGitAuthHelper {
   removeAuth(): Promise<void>;
 }
 
-export class GitAuthHelper implements IGitAuthHelper {
-  private readonly _IS_WINDOWS: boolean = process.platform === 'win32';
-  private readonly _SSH_COMMAND_KEY: string = 'core.sshCommand';
+export function createGitAuthHelper(
+  git: IGitCommandManager,
+  settings?: IGitSourceSettings
+): IGitAuthHelper {
+  return new GitAuthHelper(git, settings);
+}
+
+class GitAuthHelper implements IGitAuthHelper {
   private readonly _git: IGitCommandManager;
   private readonly _settings: IGitSourceSettings;
   private readonly _tokenConfigKey: string;
   private readonly _tokenConfigValue: string;
+  private readonly _tokenPlaceholderConfigValue: string;
   private readonly _insteadOfKey: string;
   private readonly _insteadOfValues: string[] = [];
   private _sshCommand: string = '';
   private _sshKeyPath: string = '';
   private _sshKnownHostsPath: string = '';
+  private _temporaryHomePath: string = '';
 
   constructor(
     gitCommandManager: IGitCommandManager,
-    gitSourceSettings: IGitSourceSettings
+    gitSourceSettings: IGitSourceSettings | undefined
   ) {
-    core.startGroup('Starting Git Auth Helper');
     this._git = gitCommandManager;
-    this._settings = gitSourceSettings;
+    this._settings = gitSourceSettings || ({} as unknown as IGitSourceSettings);
 
     // Token auth header
-    const serverUrl: URL = this.getServerUrl(this.settings.githubServerUrl);
+    const serverUrl: URL = this.getServerUrl(this._settings.githubServerUrl);
     this._tokenConfigKey = `http.${serverUrl.origin}/.extraheader`; // "origin" is SCHEME://HOSTNAME[:PORT]
     const basicCredential: string = Buffer.from(
-      `x-access-token:${this.settings.authToken}`,
+      `x-access-token:${this._settings.authToken}`,
       'utf8'
     ).toString('base64');
     core.setSecret(basicCredential);
+    this._tokenPlaceholderConfigValue =
+      Constants.TOKEN_PLACEHOLDER_CONFIG_VALUE;
     this._tokenConfigValue = `AUTHORIZATION: basic ${basicCredential}`;
 
     // Instead of SSH URL
     this._insteadOfKey = `url.${serverUrl.origin}/.insteadOf`; // "origin" is SCHEME://HOSTNAME[:PORT]
-    this.insteadOfValues.push(`git@${serverUrl.hostname}:`);
-    if (this.settings.workflowOrganizationId) {
-      this.insteadOfValues.push(
-        `org-${this.settings.workflowOrganizationId}@github.com:`
+    this._insteadOfValues.push(`git@${serverUrl.hostname}:`);
+    if (this._settings.workflowOrganizationId) {
+      this._insteadOfValues.push(
+        `org-${this._settings.workflowOrganizationId}@github.com:`
       );
     }
-    core.endGroup();
   }
 
   async configureAuth(): Promise<void> {
@@ -84,30 +94,30 @@ export class GitAuthHelper implements IGitAuthHelper {
   }
 
   private async configureSsh(): Promise<void> {
-    if (!this.settings.sshKey) {
+    if (!this._settings.sshKey) {
       return;
     }
 
     // Write key
-    const runnerTemp: string | undefined = process.env['RUNNER_TEMP'];
+    const runnerTemp: string = process.env['RUNNER_TEMP'] || '';
     assert.ok(runnerTemp, 'RUNNER_TEMP is not defined');
     const uniqueId: string = uuidv4();
     this._sshKeyPath = path.join(runnerTemp, uniqueId);
-    this.setState('sshKeyPath', this.sshKeyPath);
-    await promises.mkdir(runnerTemp, { recursive: true });
-    await promises.writeFile(
-      this.sshKeyPath,
-      `${this.settings.sshKey.trim()}\n`,
+    stateHelper.setSshKeyPath(this._sshKeyPath);
+    await fs.promises.mkdir(runnerTemp, { recursive: true });
+    await fs.promises.writeFile(
+      this._sshKeyPath,
+      `${this._settings.sshKey.trim()}\n`,
       { mode: 0o600 }
     );
 
     // Remove inherited permissions on Windows
-    if (this.IS_WINDOWS) {
+    if (IS_WINDOWS) {
       const icacls: string = await io.which('icacls.exe');
       await exec.exec(
-        `"${icacls}" "${this.sshKeyPath}" /grant:r "${process.env['USERDOMAIN']}\\${process.env['USERNAME']}:F"`
+        `"${icacls}" "${this._sshKeyPath}" /grant:r "${process.env['USERDOMAIN']}\\${process.env['USERNAME']}:F"`
       );
-      await exec.exec(`"${icacls}" "${this.sshKeyPath}" /inheritance:r`);
+      await exec.exec(`"${icacls}" "${this._sshKeyPath}" /inheritance:r`);
     }
 
     // Write known hosts
@@ -118,7 +128,9 @@ export class GitAuthHelper implements IGitAuthHelper {
     );
     let userKnownHosts: string = '';
     try {
-      userKnownHosts = (await promises.readFile(userKnownHostsPath)).toString();
+      userKnownHosts = (
+        await fs.promises.readFile(userKnownHostsPath)
+      ).toString();
     } catch (err) {
       /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
       if ((err as any)?.code !== 'ENOENT') {
@@ -129,31 +141,31 @@ export class GitAuthHelper implements IGitAuthHelper {
     if (userKnownHosts) {
       knownHosts += `# Begin from ${userKnownHostsPath}\n${userKnownHosts}\n# End from ${userKnownHostsPath}\n`;
     }
-    if (this.settings.sshKnownHosts) {
-      knownHosts += `# Begin from input known hosts\n${this.settings.sshKnownHosts}\n# end from input known hosts\n`;
+    if (this._settings.sshKnownHosts) {
+      knownHosts += `# Begin from input known hosts\n${this._settings.sshKnownHosts}\n# end from input known hosts\n`;
     }
     knownHosts += `# Begin implicitly added github.com\ngithub.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=\n# End implicitly added github.com\n`;
     this._sshKnownHostsPath = path.join(runnerTemp, `${uniqueId}_known_hosts`);
-    this.setState('sshKnownHostsPath', this.sshKnownHostsPath);
-    await promises.writeFile(this.sshKnownHostsPath, knownHosts);
+    stateHelper.setSshKnownHostsPath(this._sshKnownHostsPath);
+    await fs.promises.writeFile(this._sshKnownHostsPath, knownHosts);
 
     // Configure GIT_SSH_COMMAND
     const sshPath: string = await io.which('ssh', true);
     this._sshCommand = `"${sshPath}" -i "$RUNNER_TEMP/${path.basename(
-      this.sshKeyPath
+      this._sshKeyPath
     )}"`;
-    if (this.settings.sshStrict) {
+    if (this._settings.sshStrict) {
       this._sshCommand += ' -o StrictHostKeyChecking=yes -o CheckHostIP=no';
     }
     this._sshCommand += ` -o "UserKnownHostsFile=$RUNNER_TEMP/${path.basename(
-      this.sshKnownHostsPath
+      this._sshKnownHostsPath
     )}"`;
-    core.info(`Temporarily overriding GIT_SSH_COMMAND=${this.sshCommand}`);
-    this.git.setEnvironmentVariable('GIT_SSH_COMMAND', this.sshCommand);
+    core.info(`Temporarily overriding GIT_SSH_COMMAND=${this._sshCommand}`);
+    this._git.setEnvironmentVariable('GIT_SSH_COMMAND', this._sshCommand);
 
     // Configure core.sshCommand
-    if (this.settings.persistCredentials) {
-      await this.git.config(this.SSH_COMMAND_KEY, this.sshCommand);
+    if (this._settings.persistCredentials) {
+      await this._git.config(SSH_COMMAND_KEY, this._sshCommand);
     }
   }
 
@@ -169,48 +181,46 @@ export class GitAuthHelper implements IGitAuthHelper {
 
     // Default config path
     if (!configPath && !globalConfig) {
-      configPath = path.join(this.git.workingDirectory, '.git', 'config');
+      configPath = path.join(this._git.getWorkingDirectory(), '.git', 'config');
     }
 
     // Configure a placeholder value. This approach avoids the credential being captured
     // by process creation audit events, which are commonly logged. For more information,
     // refer to https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/manage/component-updates/command-line-process-auditing
-    await this.git.config(
-      this.tokenConfigKey,
-      Constants.TOKEN_PLACEHOLDER_CONFIG_VALUE,
+    await this._git.config(
+      this._tokenConfigKey,
+      this._tokenPlaceholderConfigValue,
       globalConfig
     );
 
     // Replace the placeholder
-    await this.replaceTokenPlaceholder(configPath);
+    await this.replaceTokenPlaceholder(configPath || '');
   }
 
-  private async replaceTokenPlaceholder(
-    configPath: string | undefined
-  ): Promise<void> {
+  private async replaceTokenPlaceholder(configPath: string): Promise<void> {
     assert.ok(configPath, 'configPath is not defined');
-    let content: string = (await promises.readFile(configPath)).toString();
+    let content: string = (await fs.promises.readFile(configPath)).toString();
     const placeholderIndex: number = content.indexOf(
-      Constants.TOKEN_PLACEHOLDER_CONFIG_VALUE
+      this._tokenPlaceholderConfigValue
     );
     if (
       placeholderIndex < 0 ||
       placeholderIndex !==
-        content.lastIndexOf(Constants.TOKEN_PLACEHOLDER_CONFIG_VALUE)
+        content.lastIndexOf(this._tokenPlaceholderConfigValue)
     ) {
       throw new Error(`Unable to replace auth placeholder in ${configPath}`);
     }
-    assert.ok(this.tokenConfigValue, 'tokenConfigValue is not defined');
+    assert.ok(this._tokenConfigValue, 'tokenConfigValue is not defined');
     content = content.replace(
-      Constants.TOKEN_PLACEHOLDER_CONFIG_VALUE,
-      this.tokenConfigValue
+      this._tokenPlaceholderConfigValue,
+      this._tokenConfigValue
     );
-    await promises.writeFile(configPath, content);
+    await fs.promises.writeFile(configPath, content);
   }
 
   private async removeSsh(): Promise<void> {
     // SSH key
-    const keyPath: string = this.sshKeyPath || this.getState('sshKeyPath');
+    const keyPath: string = this._sshKeyPath || stateHelper.SshKeyPath;
     if (keyPath) {
       try {
         await io.rmRF(keyPath);
@@ -223,7 +233,7 @@ export class GitAuthHelper implements IGitAuthHelper {
 
     // SSH known hosts
     const knownHostsPath: string =
-      this.sshKnownHostsPath || this.getState('sshKnownHostsPath');
+      this._sshKnownHostsPath || stateHelper.SshKnownHostsPath;
     if (knownHostsPath) {
       try {
         await io.rmRF(knownHostsPath);
@@ -233,47 +243,42 @@ export class GitAuthHelper implements IGitAuthHelper {
     }
 
     // SSH command
-    await this.removeGitConfig(this.SSH_COMMAND_KEY);
+    await this.removeGitConfig(SSH_COMMAND_KEY);
   }
 
   private async removeToken(): Promise<void> {
     // HTTP extra header
-    await this.removeGitConfig(this.tokenConfigKey);
+    await this.removeGitConfig(this._tokenConfigKey);
   }
 
-  private async removeGitConfig(configKey: string): Promise<void> {
-    if (
-      (await this.git.configExists(configKey)) &&
-      !(await this.git.unsetConfig(configKey))
-    ) {
-      // Load the config contents
-      core.warning(`Failed to remove '${configKey}' from the git config`);
+  private async removeGitConfig(
+    configKey: string,
+    submoduleOnly: boolean = false
+  ): Promise<void> {
+    if (!submoduleOnly) {
+      if (
+        (await this._git.configExists(configKey)) &&
+        !(await this._git.tryConfigUnset(configKey))
+      ) {
+        // Load the config contents
+        core.warning(`Failed to remove '${configKey}' from the git config`);
+      }
     }
-  }
 
-  private setState(key: string, value: string): void {
-    core.saveState(key, value);
-  }
-
-  private getState(key: string): string {
-    return core.getState(key);
+    const pattern: string = regexpHelper.escape(configKey);
+    await this._git.submoduleForeach(
+      // wrap the pipeline in quotes to make sure it's handled properly by submoduleForeach, rather than just the first part of the pipeline
+      `sh -c "git config --local --name-only --get-regexp '${pattern}' && git config --local --unset-all '${configKey}' || :"`,
+      true
+    );
   }
 
   private getServerUrl(url?: string): URL {
     const urlValue: string =
       url && url.trim().length > 0
         ? url
-        : process.env['GITHUB_SERVER_URL'] ?? 'https://github.com';
-    core.debug(`Server URL: "${urlValue}"`);
+        : process.env['GITHUB_SERVER_URL'] || 'https://github.com';
     return new URL(urlValue);
-  }
-
-  get IS_WINDOWS(): boolean {
-    return this._IS_WINDOWS;
-  }
-
-  get SSH_COMMAND_KEY(): string {
-    return this._SSH_COMMAND_KEY;
   }
 
   get git(): IGitCommandManager {
@@ -290,6 +295,10 @@ export class GitAuthHelper implements IGitAuthHelper {
 
   get tokenConfigValue(): string {
     return this._tokenConfigValue;
+  }
+
+  get tokenPlaceholderConfigValue(): string {
+    return this._tokenPlaceholderConfigValue;
   }
 
   get insteadOfKey(): string {

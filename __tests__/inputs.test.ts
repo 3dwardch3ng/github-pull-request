@@ -30,13 +30,24 @@ describe('Test inputs.ts', (): void => {
       verifyOptionalOverrideValues(inputs);
       expect(inputs.MERGE_METHOD).toBe('merge');
     });
+
+    it('should be able to reset PR_BODY value', (): void => {
+      setRequiredProcessEnvValues();
+      setOptionalProcessEnvValues();
+      setValidOptionalProcessEnvValues();
+      const inputs: IInputs = prepareInputValues();
+      const existingPRBody: string = inputs.PR_BODY;
+      expect(existingPRBody).toBe('pr-body');
+      inputs.PR_BODY = 'new-pr-body';
+      expect(inputs.PR_BODY).toBe('new-pr-body');
+    });
   });
 });
 
 function setRequiredProcessEnvValues(): void {
-  process.env['INPUT_GITHUB_TOKEN'] = 'github-token';
+  process.env['INPUT_GITHUB_TOKEN'] = 'git-token';
   process.env['INPUT_REPO_OWNER'] = '3dwardch3ng';
-  process.env['INPUT_REPO_NAME'] = 'github-pull-request';
+  process.env['INPUT_REPO_NAME'] = 'git-pull-request';
   process.env['INPUT_SOURCE_BRANCH'] = 'source-branch';
   process.env['INPUT_TARGET_BRANCH'] = 'target-branch';
   process.env['INPUT_PR_TITLE'] = 'pr-title';
@@ -67,9 +78,9 @@ function setInvalidOptionalProcessEnvValues(): void {
 }
 
 function verifyRequiredValues(inputs: IInputs): void {
-  expect(inputs.GITHUB_TOKEN).toBe('github-token');
+  expect(inputs.GITHUB_TOKEN).toBe('git-token');
   expect(inputs.REPO_OWNER).toBe('3dwardch3ng');
-  expect(inputs.REPO_NAME).toBe('github-pull-request');
+  expect(inputs.REPO_NAME).toBe('git-pull-request');
   expect(inputs.SOURCE_BRANCH_NAME).toBe('source-branch');
   expect(inputs.TARGET_BRANCH_NAME).toBe('target-branch');
   expect(inputs.PR_TITLE).toBe('pr-title');

@@ -72,7 +72,11 @@ describe('Test git-command-manager.ts', (): void => {
 
     it('should initialise GitCommandManager instance', async (): Promise<void> => {
       const gitCommandManager: IGitCommandManager =
-        await createGitCommandManager(workingDirectory, false, false);
+        await GitCommandManagerRealModule.createGitCommandManager(
+          workingDirectory,
+          false,
+          false
+        );
 
       expect(gitCommandManager).toBeDefined();
       expect(infoSpy).toHaveBeenCalledTimes(2);

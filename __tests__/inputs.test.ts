@@ -30,6 +30,17 @@ describe('Test inputs.ts', (): void => {
       verifyOptionalOverrideValues(inputs);
       expect(inputs.MERGE_METHOD).toBe('merge');
     });
+
+    it('should be able to reset PR_BODY value', (): void => {
+      setRequiredProcessEnvValues();
+      setOptionalProcessEnvValues();
+      setValidOptionalProcessEnvValues();
+      const inputs: IInputs = prepareInputValues();
+      const existingPRBody: string = inputs.PR_BODY;
+      expect(existingPRBody).toBe('pr-body');
+      inputs.PR_BODY = 'new-pr-body';
+      expect(inputs.PR_BODY).toBe('new-pr-body');
+    });
   });
 });
 

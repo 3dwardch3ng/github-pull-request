@@ -11,7 +11,6 @@ import { IRetryHelper } from '../retry-helper';
 import { GitVersion } from './git-version';
 import { GitExecOutput } from './git-exec-output';
 import { ErrorMessages } from '../message';
-import { IGitSourceSettings } from './git-source-settings';
 
 export const tagsRefSpec: string = '+refs/tags/*:refs/tags/*';
 
@@ -107,6 +106,7 @@ export interface IGitCommandManager {
     args: string[],
     allowAllExitCodes: boolean | undefined,
     silent: boolean | undefined,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     customListeners: any | undefined
   ): Promise<GitExecOutput>;
 }

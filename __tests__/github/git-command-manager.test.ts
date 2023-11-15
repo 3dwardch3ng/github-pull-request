@@ -1,8 +1,6 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import {
-  createGitCommandManager,
-  GitCommandManager,
   IGitCommandManager,
   IWorkingBaseAndType
 } from '../../src/github/git-command-manager';
@@ -620,7 +618,6 @@ describe('Test git-command-manager.ts', (): void => {
   });
 
   describe('Test fetch function', (): void => {
-    const workingDir: string = '/home/runner/work/_temp/_github_home';
     const execSpy: jest.SpyInstance = jest.spyOn(exec, 'exec');
     let GitCommandManagerRealModule: typeof import('../../src/github/git-command-manager');
 

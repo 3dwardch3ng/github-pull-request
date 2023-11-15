@@ -83,9 +83,9 @@ const hasDiffMock: jest.Mock<any, any, any> = jest.fn();
 const isEvenMock: jest.Mock<any, any, any> = jest.fn();
 const fetchAllMock: jest.Mock<any, any, any> = jest.fn();
 const switchMock: jest.Mock<any, any, any> = jest.fn();
-jest.mock('../src/git/git-command-manager', () => {
+jest.mock('../src/github/git-command-manager', () => {
   return {
-    ...jest.requireActual('../src/git/git-command-manager'),
+    ...jest.requireActual('../src/github/git-command-manager'),
     GitCommandManager: jest.fn().mockImplementation(() => {
       return {
         init: initMock,
@@ -137,7 +137,7 @@ jest.mock('../src/github-client', () => {
 });
 const configureAuthMock: jest.Mock<any, any, any> = jest.fn();
 const removeAuthMock: jest.Mock<any, any, any> = jest.fn();
-jest.mock('../src/git/git-auth-helper', () => {
+jest.mock('../src/github/git-auth-helper', () => {
   return {
     GitAuthHelper: jest.fn().mockImplementation(() => {
       return {
@@ -147,7 +147,7 @@ jest.mock('../src/git/git-auth-helper', () => {
     })
   };
 });
-jest.mock('../src/git/git-source-settings', () => {
+jest.mock('../src/github/git-source-settings', () => {
   return {
     GitSourceSettings: jest.fn().mockImplementation(() => {
       return {
@@ -552,7 +552,7 @@ describe('Test service.ts', (): void => {
           .spyOn(RetryHelperWrapper, 'executeWithCustomised')
           .mockImplementation(
             async (
-              maxAttempts: number,
+              maxAttempts: number | undefined,
               minSeconds: number | undefined,
               maxSeconds: number | undefined,
               attemptsInterval: number | undefined,
@@ -636,7 +636,7 @@ describe('Test service.ts', (): void => {
           .spyOn(RetryHelperWrapper, 'executeWithCustomised')
           .mockImplementation(
             async (
-              maxAttempts: number,
+              maxAttempts: number | undefined,
               minSeconds: number | undefined,
               maxSeconds: number | undefined,
               attemptsInterval: number | undefined,

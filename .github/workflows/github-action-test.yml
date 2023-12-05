@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 0
       - name: Get branch name
         id: branch-name
-        uses: tj-actions/branch-names@v7.0.5
+        uses: tj-actions/branch-names@v7.0.7
       - name: Test Local Action
         id: test-action-merge-develop-to-current-branch
         uses: ./
